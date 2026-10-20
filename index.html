@@ -238,6 +238,7 @@
     font-size: clamp(1.2rem, 5vw, 1.7rem); font-weight: 800; position: relative;
   }
   .name-chip sup { color: var(--muted); font-size: .65rem; margin-right: 4px; }
+  .say { font-style: italic; color: var(--accent); font-weight: 700; cursor: help; }
   .prompt-meaning { font-size: 1.1rem; color: var(--muted); margin-top: 6px; }
 
   .word-area { margin-top: 16px; }
@@ -512,7 +513,7 @@ const WORDS = [
   ["مطر", "rain", "🌧️"],    ["ثعلب", "fox", "🦊"],    ["ضفدع", "frog", "🐸"],
   ["غزال", "gazelle", "🦌"], ["هاتف", "phone", "📱"], ["حوت", "whale", "🐋"],
   ["مسجد", "mosque", "🕌"], ["قطار", "train", "🚆"],  ["بطيخ", "watermelon", "🍉"],
-  ["خيار", "cucumber", "🥒"], ["شاي", "tea", "🍵"],   ["صقر", "falcon", "🦅"],
+  ["خيار", "cucumber", "🥒"], ["شاي", "tea", "🍵"],   ["صقر", "falcon", "🦅"], ["باز", "hawk", "🦅"],
   ["سكين", "knife", "🔪"],  ["صحن", "plate", "🍽️"],  ["طفل", "child", "🧒"],
   // With the extra letters (ء أ إ آ ؤ ئ ة ى)
   ["أناناس", "pineapple", "🍍"], ["أسد", "lion", "🦁"],    ["أرنب", "rabbit", "🐇"],
@@ -527,6 +528,40 @@ const WORDS = [
   ["مدرسة", "school", "🏫"], ["بقرة", "cow", "🐄"],     ["مستشفى", "hospital", "🏥"],
   ["موسيقى", "music", "🎵"],
 ].map(([ar, meaning, emoji]) => ({ ar, meaning, emoji, letters: [...ar].map(c => LETTER_BY_AR[c]) }));
+
+// How each word sounds, in English letters. Capitals mark the "heavy" letters
+// (T S D H DH = ط ص ض ح ظ) and are shown underlined, like the names on the chart.
+// ' = hamza (a short stop in the throat), ʿ = ayn (a deep sound from the throat).
+const SAY = {
+  "بيت": "bayt", "باب": "baab", "كتاب": "kitaab", "ثلج": "thalj", "جزر": "jazar",
+  "خبز": "khubz", "زيتون": "zaytuun", "شمس": "shams", "صاروخ": "Saaruukh", "عنب": "ʿinab",
+  "غيم": "ghaym", "ظرف": "DHarf", "قلم": "qalam", "كرسي": "kursii", "ليمون": "laymuun",
+  "موز": "mawz", "يقطين": "yaqTiin", "قمر": "qamar", "بحر": "baHr", "سمك": "samak",
+  "ولد": "walad", "بنت": "bint", "كلب": "kalb", "قط": "qiTT", "فيل": "fiil",
+  "حليب": "Haliib", "نار": "naar", "شجر": "shajar", "ورد": "ward", "بيض": "bayD",
+  "جمل": "jamal", "حصان": "HiSaan", "خروف": "kharuuf", "دب": "dubb", "ذهب": "dhahab",
+  "ثوم": "thuum", "بصل": "baSal", "عسل": "ʿasal", "تمر": "tamr", "نمر": "namir",
+  "ديك": "diik", "وجه": "wajh", "يد": "yad", "عين": "ʿayn", "فم": "fam",
+  "قلب": "qalb", "مفتاح": "miftaaH", "سرير": "sariir", "مطر": "maTar", "ثعلب": "thaʿlab",
+  "ضفدع": "Difdaʿ", "غزال": "ghazaal", "هاتف": "haatif", "حوت": "Huut", "مسجد": "masjid",
+  "قطار": "qiTaar", "بطيخ": "baTTiikh", "خيار": "khiyaar", "شاي": "shaay", "صقر": "Saqr", "باز": "baaz",
+  "سكين": "sikkiin", "صحن": "SaHn", "طفل": "Tifl", "أناناس": "'anaanaas", "أسد": "'asad",
+  "أرنب": "'arnab", "إصبع": "'iSbaʿ", "إبرة": "'ibra", "قرآن": "qur'aan", "مرآة": "mir'aa",
+  "لؤلؤ": "lu'lu'", "ذئب": "dhi'b", "طائرة": "Taa'ira", "ماء": "maa'", "سماء": "samaa'",
+  "ضوء": "Daw'", "تفاحة": "tuffaaHa", "ذرة": "dhura", "ريشة": "riisha", "سفينة": "safiina",
+  "فراولة": "faraawla", "نجمة": "najma", "هدية": "hadiyya", "وردة": "warda", "دراجة": "darraaja",
+  "حقيبة": "Haqiiba", "قهوة": "qahwa", "فراشة": "faraasha", "شجرة": "shajara", "سيارة": "sayyaara",
+  "مدرسة": "madrasa", "بقرة": "baqara", "مستشفى": "mustashfaa", "موسيقى": "muusiiqaa",
+};
+for (const w of WORDS) w.say = SAY[w.ar];
+for (const l of LETTERS) l.say = SAY[l.word];
+
+// Render a pronunciation, underlining the heavy letters.
+function sayHtml(say) {
+  if (!say) return "";
+  const html = say.replace(/DH|[TSDH]/g, m => `<u>${m.toLowerCase()}</u>`);
+  return `<span class="say" title="' = short stop (hamza) · ʿ = ayn, a deep throat sound · underlined = heavy letter">“${html}”</span>`;
+}
 
 const WORD_GAMES = new Set(["spell", "read"]);
 const WORDS_PER_ROUND = 10;
@@ -704,7 +739,7 @@ function renderWord() {
     prompt.innerHTML =
       `<div class="prompt-names">${word.letters.map((l, i) =>
         `<span class="name-chip"><sup>${i + 1}</sup>${l.name}</span>`).join("")}</div>
-       <div class="prompt-meaning">${word.emoji} ${word.meaning}</div>`;
+       <div class="prompt-meaning">${word.emoji} ${word.meaning} · ${sayHtml(word.say)}</div>`;
     const input = $("spellInput");
     input.value = "";
     input.disabled = false;
@@ -726,7 +761,7 @@ function showWordFeedback(correct, wrongPositions = new Set()) {
   recordResult(correct, word);
   if (!correct) $("fbMsg").innerHTML = `Not quite — it's <span class="arf" style="font-size:1.5rem">${word.ar}</span>`;
   const extras = [...new Set(word.letters.filter(l => l.extra))];
-  $("fbExample").innerHTML = `${word.emoji} <span class="word">${word.ar}</span> — ${word.meaning}` +
+  $("fbExample").innerHTML = `${word.emoji} <span class="word">${word.ar}</span> ${sayHtml(word.say)} — ${word.meaning}` +
     extras.map(l => `<div class="note"><span class="arf">${l.ar}</span> <b>${l.name}</b>: ${l.note}</div>`).join("");
   $("fbForms").className = "forms-row word";
   $("fbForms").innerHTML = word.letters.map((l, i) =>
@@ -914,7 +949,7 @@ function answer(btn, chosen) {
   }
 
   $("fbExample").innerHTML =
-    `${letter.emoji} <span class="word">${letter.word}</span> — ${letter.meaning}`;
+    `${letter.emoji} <span class="word">${letter.word}</span> ${sayHtml(letter.say)} — ${letter.meaning}`;
   $("fbForms").className = "forms-row";
   $("fbForms").innerHTML = ["isolated", "initial", "medial", "final"].map(f =>
     `<span style="${f === form ? "color:var(--accent)" : ""}">${shape(letter.ar, f)}<small>${FORM_LABELS[f]}</small></span>`
@@ -933,7 +968,7 @@ function endGame() {
   $("retryMissedBtn").classList.toggle("hidden", !state.missed.length);
   $("missedTitle").textContent = isWordGame() ? "Words to review:" : "Letters to review:";
   $("missed").innerHTML = state.missed.map(item => isWordGame()
-    ? `<div><div class="ar">${item.ar}</div>${item.emoji} ${item.meaning}</div>`
+    ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${item.emoji} ${item.meaning}</div>`
     : `<div><div class="ar">${item.ar}</div>${item.name}</div>`).join("");
   show("summary");
 }
