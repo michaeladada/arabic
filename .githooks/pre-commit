@@ -1,0 +1,7 @@
+#!/bin/sh
+# Keep the ?v= cache-busting stamps in index.html up to date on every commit.
+# Enable once per clone with:  git config core.hooksPath .githooks
+if git diff --cached --name-only | grep -qE '^(style\.css|app\.js|index\.html)$'; then
+  tools/update-versions.sh --staged
+  git add index.html
+fi
