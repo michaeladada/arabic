@@ -228,6 +228,63 @@
   .letters-foot .hint { margin: 0; }
   .btn:disabled { opacity: .45; cursor: default; }
 
+  /* ---------- Word games ---------- */
+  .group-title { margin: 22px 0 10px; color: var(--muted); font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
+  .game-card .demo .en.small { font-size: 1.05rem; }
+  .prompt-word { font-family: "Noto Naskh Arabic", serif; font-size: clamp(4rem, 16vw, 7rem); line-height: 1.6; margin: 0; }
+  .prompt-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px 0 10px; }
+  .name-chip {
+    background: #f1ecff; border-radius: 12px; padding: 8px 14px;
+    font-size: clamp(1.2rem, 5vw, 1.7rem); font-weight: 800; position: relative;
+  }
+  .name-chip sup { color: var(--muted); font-size: .65rem; margin-right: 4px; }
+  .prompt-meaning { font-size: 1.1rem; color: var(--muted); margin-top: 6px; }
+
+  .word-area { margin-top: 16px; }
+  .spell-row { display: flex; gap: 10px; }
+  .word-input {
+    flex: 1; min-width: 0;
+    font-family: "Noto Naskh Arabic", serif; font-size: 2.4rem; line-height: 1.5;
+    padding: 4px 16px; border: 3px solid #e6e1ee; border-radius: 14px; background: var(--card); color: var(--ink);
+  }
+  .word-input:focus { outline: none; border-color: var(--accent); }
+  .word-input.correct { border-color: var(--good); background: #e7f9ef; }
+  .word-input.wrong { border-color: var(--bad); background: #ffecec; }
+  .area-tools { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .area-tools .hint { margin: 0; color: var(--muted); font-size: .85rem; }
+  .seg { display: flex; gap: 6px; }
+  .seg .btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+  .osk { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; margin-top: 10px; direction: rtl; }
+  .osk button {
+    background: var(--card); border: 2px solid #e6e1ee; padding: 2px 0;
+    font-family: "Noto Naskh Arabic", serif; font-size: 1.7rem; line-height: 1.5;
+  }
+  .osk button:hover { border-color: var(--accent); }
+  .osk button.wide { grid-column: span 2; font-family: "Nunito", sans-serif; font-size: 1rem; font-weight: 700; }
+
+  .built {
+    background: var(--card); border: 3px dashed #e6e1ee; border-radius: var(--radius);
+    min-height: 92px; padding: 10px; text-align: center;
+  }
+  .built.correct { border-style: solid; border-color: var(--good); background: #e7f9ef; }
+  .built.wrong { border-style: solid; border-color: var(--bad); background: #fff6f6; }
+  .built-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 36px; }
+  .built-names span { background: #f1ecff; border-radius: 10px; padding: 4px 10px; font-weight: 800; }
+  .built-names span.bad { background: #ffd6d6; color: #b3261e; }
+  .built-names .placeholder { background: none; color: #bbb; font-weight: 400; }
+  .built-ar { font-size: 2.6rem; line-height: 1.5; min-height: 1.5em; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 12px; }
+  .tile { background: var(--card); border: 3px solid #e6e1ee; padding: 10px 4px; font-weight: 800; font-size: 1.05rem; }
+  .tile:hover:not(:disabled) { border-color: var(--accent); }
+  .tile:disabled { opacity: .5; cursor: default; }
+
+  .forms-row.word { direction: rtl; flex-wrap: wrap; justify-content: center; }
+  .forms-row.word span.bad { color: var(--bad); }
+  .osk button.extra { background: #fff7e6; }
+  .feedback .note { font-size: .9rem; margin-top: 4px; }
+  .feedback .note .arf { font-size: 1.3rem; color: var(--ink); }
+
   @media (max-width: 420px) {
     .option { font-size: 1.25rem; }
     .option.ar { font-size: 2.8rem; }
@@ -245,6 +302,7 @@
   <!-- ===== Menu ===== -->
   <section id="menu" class="menu">
     <h2>Choose a game</h2>
+    <h3 class="group-title">Letters</h3>
     <div class="games">
       <button class="game-card" data-game="ar2name">
         <div class="demo"><span class="ar">ج</span> → <span class="en">djiim</span></div>
@@ -257,7 +315,20 @@
         <p>See a letter name, pick the Arabic letter.</p>
       </button>
     </div>
-    <p class="hint center">Tip: use keys 1–4 to answer and Enter for the next letter. Choose letters and forms with ⚙ Settings inside the game.</p>
+    <h3 class="group-title">Words</h3>
+    <div class="games">
+      <button class="game-card" data-game="spell">
+        <div class="demo"><span class="en small">shiin·miim·siin</span> → <span class="ar">شمس</span></div>
+        <h3>Spell it</h3>
+        <p>See the letter names, type the word in Arabic.</p>
+      </button>
+      <button class="game-card" data-game="read">
+        <div class="demo"><span class="ar">شمس</span> → <span class="en small">shiin·miim·siin</span></div>
+        <h3>Read it</h3>
+        <p>See an Arabic word, build it from letter names.</p>
+      </button>
+    </div>
+    <p class="hint center">Tip: keys 1–4 answer, Enter goes next. Choose letters and forms with ⚙ Settings inside the game.</p>
   </section>
 
   <!-- ===== Game ===== -->
@@ -274,16 +345,18 @@
     </div>
 
     <div class="settings hidden" id="settings">
-      <h3>Letter forms</h3>
-      <div class="forms" id="formChecks">
-        <label><input type="checkbox" value="isolated" checked> Isolated &nbsp;<b class="arf">ب</b></label>
-        <label><input type="checkbox" value="initial" checked> Beginning &nbsp;<b class="arf">بـ</b></label>
-        <label><input type="checkbox" value="medial" checked> Middle &nbsp;<b class="arf">ـبـ</b></label>
-        <label><input type="checkbox" value="final" checked> End &nbsp;<b class="arf">ـب</b></label>
+      <div id="formsSection">
+        <h3>Letter forms</h3>
+        <div class="forms" id="formChecks">
+          <label><input type="checkbox" value="isolated" checked> Isolated &nbsp;<b class="arf">ب</b></label>
+          <label><input type="checkbox" value="initial" checked> Beginning &nbsp;<b class="arf">بـ</b></label>
+          <label><input type="checkbox" value="medial" checked> Middle &nbsp;<b class="arf">ـبـ</b></label>
+          <label><input type="checkbox" value="final" checked> End &nbsp;<b class="arf">ـب</b></label>
+        </div>
+        <p class="hint">Each letter is shown in a random form from the ones you select. Changes apply right away.</p>
       </div>
-      <p class="hint">Each letter is shown in a random form from the ones you select. Changes apply right away.</p>
 
-      <div class="letters-head">
+      <div class="letters-head" id="lettersHead">
         <h3>Letters <span class="muted" id="letterCount"></span></h3>
         <div>
           <button class="btn secondary small" id="allLettersBtn">All</button>
@@ -308,6 +381,40 @@
 
     <div class="options" id="options"></div>
 
+    <!-- Spell it: type the Arabic word -->
+    <div class="word-area hidden" id="spellArea">
+      <div class="spell-row">
+        <input id="spellInput" class="word-input" dir="rtl" lang="ar" autocomplete="off"
+               autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="اكتب هنا">
+        <button class="btn" id="checkSpellBtn">Check</button>
+      </div>
+      <div class="area-tools">
+        <button class="btn secondary small" id="oskToggle" aria-pressed="false">⌨ On-screen Arabic keyboard</button>
+        <span class="hint">Arabic is written right to left: the first letter goes on the right.</span>
+      </div>
+      <div class="osk hidden" id="osk"></div>
+    </div>
+
+    <!-- Read it: build the word from letter-name tiles -->
+    <div class="word-area hidden" id="readArea">
+      <div class="built" id="built">
+        <div class="built-names" id="builtNames"></div>
+        <div class="built-ar arf" id="builtAr"></div>
+      </div>
+      <div class="area-tools">
+        <div class="seg" role="group" aria-label="Tiles">
+          <button class="btn secondary small" data-mode="easy">Easy tiles</button>
+          <button class="btn secondary small" data-mode="all">All letters</button>
+        </div>
+        <div class="seg">
+          <button class="btn secondary small" id="undoBtn">⌫ Undo</button>
+          <button class="btn secondary small" id="clearBtn">Clear</button>
+          <button class="btn small" id="checkReadBtn">Check</button>
+        </div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+    </div>
+
     <div class="feedback hidden" id="feedback">
       <div>
         <div class="msg" id="fbMsg"></div>
@@ -324,12 +431,12 @@
       <h2>Round complete! 🎉</h2>
       <div class="big" id="finalScore"></div>
       <div id="missedWrap">
-        <p>Letters to review:</p>
+        <p id="missedTitle">Letters to review:</p>
         <div class="missed" id="missed"></div>
       </div>
       <div class="actions">
         <button class="btn" id="againBtn">Play again</button>
-        <button class="btn secondary" id="retryMissedBtn">Practise missed letters</button>
+        <button class="btn secondary" id="retryMissedBtn">Practise missed ones</button>
         <button class="btn secondary" id="menuBtn">Choose another game</button>
       </div>
     </div>
@@ -369,6 +476,60 @@ const LETTERS = [
   { ar: "و", name: "waaw",  word: "وردة",   meaning: "flower",     emoji: "🌸", group: "r" },
   { ar: "ي", name: "yaa",   word: "يقطين",  meaning: "pumpkin",    emoji: "🎃", group: "b" },
 ];
+// Extra letter shapes that appear in real words: hamza forms, taa marbuta, alif maqsura.
+// They are used in the word games only (they don't have the full set of joining forms).
+const EXTRA_LETTERS = [
+  { ar: "ء", name: "hamza",          group: "hamza", note: "a glottal stop — a short catch in the throat" },
+  { ar: "أ", name: "alif-hamza",     group: "alif",  note: "hamza sitting on top of alif" },
+  { ar: "إ", name: "alif-hamza below", group: "alif", note: "hamza under alif (an \"i\" sound at the start)" },
+  { ar: "آ", name: "alif-madda",     group: "alif",  note: "a long \"aa\" — alif with a wavy madda on top" },
+  { ar: "ؤ", name: "waaw-hamza",     group: "r",     note: "hamza sitting on waaw" },
+  { ar: "ئ", name: "yaa-hamza",      group: "b",     note: "hamza on a dotless yaa" },
+  { ar: "ة", name: "taa marbuta",    group: "h",     note: "\"tied taa\" — only at the end of a word, usually sounds like \"a\"" },
+  { ar: "ى", name: "alif maqsura",   group: "b",     note: "a dotless yaa at the end of a word that sounds like \"aa\"" },
+].map(l => ({ ...l, extra: true }));
+const ALL_LETTERS = [...LETTERS, ...EXTRA_LETTERS];
+const LETTER_BY_AR = Object.fromEntries(ALL_LETTERS.map(l => [l.ar, l]));
+
+// Words for the spelling games.
+const WORDS = [
+  ["بيت", "house", "🏠"],   ["باب", "door", "🚪"],    ["كتاب", "book", "📖"],
+  ["ثلج", "snow", "❄️"],    ["جزر", "carrots", "🥕"], ["خبز", "bread", "🍞"],
+  ["زيتون", "olives", "🫒"], ["شمس", "sun", "☀️"],    ["صاروخ", "rocket", "🚀"],
+  ["عنب", "grapes", "🍇"],  ["غيم", "clouds", "☁️"],  ["ظرف", "envelope", "✉️"],
+  ["قلم", "pen", "✏️"],     ["كرسي", "chair", "🪑"],  ["ليمون", "lemon", "🍋"],
+  ["موز", "bananas", "🍌"], ["يقطين", "pumpkin", "🎃"], ["قمر", "moon", "🌙"],
+  ["بحر", "sea", "🌊"],     ["سمك", "fish", "🐟"],    ["ولد", "boy", "👦"],
+  ["بنت", "girl", "👧"],    ["كلب", "dog", "🐕"],     ["قط", "cat", "🐈"],
+  ["فيل", "elephant", "🐘"], ["حليب", "milk", "🥛"],  ["نار", "fire", "🔥"],
+  ["شجر", "trees", "🌳"],   ["ورد", "roses", "🌹"],   ["بيض", "eggs", "🥚"],
+  ["جمل", "camel", "🐪"],   ["حصان", "horse", "🐎"],  ["خروف", "sheep", "🐑"],
+  ["دب", "bear", "🐻"],     ["ذهب", "gold", "🥇"],    ["ثوم", "garlic", "🧄"],
+  ["بصل", "onion", "🧅"],   ["عسل", "honey", "🍯"],   ["تمر", "dates", "🌴"],
+  ["نمر", "tiger", "🐅"],   ["ديك", "rooster", "🐓"], ["وجه", "face", "🙂"],
+  ["يد", "hand", "✋"],     ["عين", "eye", "👁️"],     ["فم", "mouth", "👄"],
+  ["قلب", "heart", "❤️"],   ["مفتاح", "key", "🔑"],   ["سرير", "bed", "🛏️"],
+  ["مطر", "rain", "🌧️"],    ["ثعلب", "fox", "🦊"],    ["ضفدع", "frog", "🐸"],
+  ["غزال", "gazelle", "🦌"], ["هاتف", "phone", "📱"], ["حوت", "whale", "🐋"],
+  ["مسجد", "mosque", "🕌"], ["قطار", "train", "🚆"],  ["بطيخ", "watermelon", "🍉"],
+  ["خيار", "cucumber", "🥒"], ["شاي", "tea", "🍵"],   ["صقر", "falcon", "🦅"],
+  ["سكين", "knife", "🔪"],  ["صحن", "plate", "🍽️"],  ["طفل", "child", "🧒"],
+  // With the extra letters (ء أ إ آ ؤ ئ ة ى)
+  ["أناناس", "pineapple", "🍍"], ["أسد", "lion", "🦁"],    ["أرنب", "rabbit", "🐇"],
+  ["إصبع", "finger", "👆"],  ["إبرة", "needle", "🪡"],   ["قرآن", "Quran", "📖"],
+  ["مرآة", "mirror", "🪞"],  ["لؤلؤ", "pearls", "🦪"],   ["ذئب", "wolf", "🐺"],
+  ["طائرة", "airplane", "✈️"], ["ماء", "water", "💧"],   ["سماء", "sky", "🌌"],
+  ["ضوء", "light", "💡"],    ["تفاحة", "apple", "🍎"],   ["ذرة", "corn", "🌽"],
+  ["ريشة", "feather", "🪶"], ["سفينة", "ship", "⛵"],    ["فراولة", "strawberry", "🍓"],
+  ["نجمة", "star", "⭐"],    ["هدية", "gift", "🎁"],     ["وردة", "flower", "🌸"],
+  ["دراجة", "bicycle", "🚲"], ["حقيبة", "bag", "🎒"],    ["قهوة", "coffee", "☕"],
+  ["فراشة", "butterfly", "🦋"], ["شجرة", "tree", "🌳"],  ["سيارة", "car", "🚗"],
+  ["مدرسة", "school", "🏫"], ["بقرة", "cow", "🐄"],     ["مستشفى", "hospital", "🏥"],
+  ["موسيقى", "music", "🎵"],
+].map(([ar, meaning, emoji]) => ({ ar, meaning, emoji, letters: [...ar].map(c => LETTER_BY_AR[c]) }));
+
+const WORD_GAMES = new Set(["spell", "read"]);
+const WORDS_PER_ROUND = 10;
 
 // Letters that never join to the following letter.
 const NON_CONNECTORS = new Set(["ا", "د", "ذ", "ر", "ز", "و"]);
@@ -419,9 +580,11 @@ const settings = (() => {
     return {
       forms: forms.length ? forms : [...ALL_FORMS],
       letters: new Set(letters.length ? letters : LETTERS.map(l => l.ar)),
+      osk: saved.osk === true,
+      tileMode: saved.tileMode === "all" ? "all" : "easy",
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(LETTERS.map(l => l.ar)) };
+    return { forms: [...ALL_FORMS], letters: new Set(LETTERS.map(l => l.ar)), osk: false, tileMode: "easy" };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -430,13 +593,21 @@ let pendingLetters = new Set(settings.letters);
 function saveSettings() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
-      forms: settings.forms,
+      ...settings,
       letters: [...settings.letters],
     }));
   } catch { /* storage unavailable — settings just won't persist */ }
 }
 
 const selectedLetters = () => LETTERS.filter(l => settings.letters.has(l.ar));
+
+// Words made only from the given letters; if too few, any word using at least one of them.
+function wordsFor(letterSet) {
+  const only = WORDS.filter(w => w.letters.every(l => l.extra || letterSet.has(l.ar)));
+  if (only.length >= 3) return only;
+  const some = WORDS.filter(w => w.letters.some(l => !l.extra && letterSet.has(l.ar)));
+  return some.length ? some : WORDS;
+}
 
 const $ = id => document.getElementById(id);
 const show = (...ids) => ["menu", "game", "summary"].forEach(s => $(s).classList.toggle("hidden", !ids.includes(s)));
@@ -462,20 +633,209 @@ function speak(text) {
 }
 
 // ---------- Game flow ----------
-function startGame(game, letters = selectedLetters()) {
+const isWordGame = () => WORD_GAMES.has(state.game);
+
+function startGame(game, items = null) {
   state.game = game;
   const chosen = selectedLetters();
   // Wrong answers come from your chosen letters, as long as there are enough of them.
   state.pool = chosen.length >= 4 ? chosen : LETTERS;
-  state.deck = shuffle(letters);
+  state.deck = items ? shuffle(items)
+    : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
+    : shuffle(chosen);
   state.index = 0;
   state.score = 0;
   state.streak = 0;
   state.missed = [];
   $("total").textContent = state.deck.length;
   $("homeBtn").classList.remove("hidden");
+  // Show only the answer area for this game.
+  $("options").classList.toggle("hidden", isWordGame());
+  $("spellArea").classList.toggle("hidden", game !== "spell");
+  $("readArea").classList.toggle("hidden", game !== "read");
+  $("formsSection").classList.toggle("hidden", isWordGame());
   show("game");
   nextQuestion();
+}
+
+function updateStats() {
+  $("count").textContent = Math.min(state.index + 1, state.deck.length);
+  $("bar").style.width = (state.index / state.deck.length * 100) + "%";
+  $("score").textContent = state.score;
+  $("streak").textContent = state.streak;
+}
+
+function recordResult(correct, item) {
+  if (correct) {
+    state.score++;
+    state.streak++;
+    $("fbMsg").textContent = pick(["Correct! 🎉", "Great job! ⭐", "Well done! 👏", "Excellent! 🌟"]);
+    $("fbMsg").className = "msg good";
+  } else {
+    state.streak = 0;
+    if (!state.missed.includes(item)) state.missed.push(item);
+    $("fbMsg").className = "msg bad";
+  }
+  $("score").textContent = state.score;
+  $("streak").textContent = state.streak;
+}
+
+// ---------- Word games ----------
+// Normalise typed Arabic: compose hamza/madda marks onto their letters, then drop
+// vowel marks, tatweel, spaces and joiners. Hamza forms, ة and ى must be typed exactly.
+function normaliseArabic(s) {
+  return s.normalize("NFC")
+    .replace(/[\u064B-\u065F\u0670\u0640\s\u200C\u200D]/g, "")
+    .replace(/\u0671/g, "\u0627"); // ٱ (alif wasla) → ا
+}
+
+function renderWord() {
+  const { word } = state.current;
+  state.answered = false;
+  updateStats();
+  $("feedback").classList.add("hidden");
+  $("promptSub").textContent = "";
+  $("speakBtn").classList.add("hidden");
+  const prompt = $("prompt");
+
+  if (state.game === "spell") {
+    $("formTag").textContent = "Spell the word";
+    prompt.className = "";
+    prompt.innerHTML =
+      `<div class="prompt-names">${word.letters.map((l, i) =>
+        `<span class="name-chip"><sup>${i + 1}</sup>${l.name}</span>`).join("")}</div>
+       <div class="prompt-meaning">${word.emoji} ${word.meaning}</div>`;
+    const input = $("spellInput");
+    input.value = "";
+    input.disabled = false;
+    input.className = "word-input";
+    $("checkSpellBtn").disabled = false;
+    if (!settings.osk) input.focus();
+  } else {
+    $("formTag").textContent = "Read the word";
+    prompt.className = "prompt-word";
+    prompt.textContent = word.ar;
+    state.built = [];
+    renderTiles();
+    renderBuilt();
+  }
+}
+
+function showWordFeedback(correct, wrongPositions = new Set()) {
+  const { word } = state.current;
+  recordResult(correct, word);
+  if (!correct) $("fbMsg").innerHTML = `Not quite — it's <span class="arf" style="font-size:1.5rem">${word.ar}</span>`;
+  const extras = [...new Set(word.letters.filter(l => l.extra))];
+  $("fbExample").innerHTML = `${word.emoji} <span class="word">${word.ar}</span> — ${word.meaning}` +
+    extras.map(l => `<div class="note"><span class="arf">${l.ar}</span> <b>${l.name}</b>: ${l.note}</div>`).join("");
+  $("fbForms").className = "forms-row word";
+  $("fbForms").innerHTML = word.letters.map((l, i) =>
+    `<span class="${wrongPositions.has(i) ? "bad" : ""}">${l.ar}<small>${l.name}</small></span>`).join("");
+  $("feedback").classList.remove("hidden");
+  $("nextBtn").focus();
+  speak(word.ar);
+}
+
+function checkSpelling() {
+  if (state.answered) return;
+  const input = $("spellInput");
+  const typed = [...normaliseArabic(input.value)];
+  if (!typed.length) { input.focus(); return; }
+  state.answered = true;
+  const target = state.current.word.letters.map(l => l.ar);
+  const correct = typed.join("") === target.join("");
+  const wrong = new Set(target.map((c, i) => (typed[i] === c ? -1 : i)).filter(i => i >= 0));
+  input.disabled = true;
+  input.classList.add(correct ? "correct" : "wrong");
+  $("checkSpellBtn").disabled = true;
+  showWordFeedback(correct, wrong);
+}
+
+function renderOsk() {
+  $("osk").classList.toggle("hidden", !settings.osk);
+  $("oskToggle").setAttribute("aria-pressed", settings.osk);
+  // On touch devices, keep the phone keyboard away while ours is shown.
+  $("spellInput").setAttribute("inputmode", settings.osk ? "none" : "text");
+  if ($("osk").childElementCount) return;
+  ALL_LETTERS.forEach(l => {
+    const b = document.createElement("button");
+    if (l.extra) b.className = "extra";
+    b.textContent = l.ar;
+    b.title = l.name.replace(/<\/?u>/g, "");
+    b.addEventListener("click", () => typeIntoSpell(l.ar));
+    $("osk").appendChild(b);
+  });
+  const back = document.createElement("button");
+  back.className = "wide";
+  back.textContent = "⌫ Delete";
+  back.addEventListener("click", () => typeIntoSpell(null));
+  $("osk").appendChild(back);
+}
+
+function typeIntoSpell(ch) {
+  const input = $("spellInput");
+  if (input.disabled) return;
+  input.value = ch ? input.value + ch : [...input.value].slice(0, -1).join("");
+}
+
+function renderTiles() {
+  const { word } = state.current;
+  let letters;
+  if (settings.tileMode === "all") {
+    letters = ALL_LETTERS;
+  } else {
+    // The word's letters plus a few look-alikes, in alphabet order.
+    const set = new Set(word.letters);
+    const lookAlikes = shuffle(ALL_LETTERS.filter(l => !set.has(l) && word.letters.some(w => w.group === l.group)));
+    const others = shuffle(LETTERS.filter(l => !set.has(l) && !lookAlikes.includes(l)));
+    [...lookAlikes, ...others].slice(0, Math.max(4, 8 - set.size)).forEach(l => set.add(l));
+    letters = ALL_LETTERS.filter(l => set.has(l));
+  }
+  document.querySelectorAll("#readArea .seg [data-mode]").forEach(b =>
+    b.setAttribute("aria-pressed", b.dataset.mode === settings.tileMode));
+  $("tiles").innerHTML = "";
+  letters.forEach(l => {
+    const b = document.createElement("button");
+    b.className = "tile";
+    b.innerHTML = l.name;
+    b.disabled = state.answered;
+    b.addEventListener("click", () => addBuilt(l));
+    $("tiles").appendChild(b);
+  });
+}
+
+function renderBuilt(wrong = new Set()) {
+  const n = state.current.word.letters.length;
+  const names = state.built.map((l, i) => `<span class="${wrong.has(i) ? "bad" : ""}">${l.name}</span>`);
+  for (let i = state.built.length; i < n; i++) names.push(`<span class="placeholder">${i + 1}</span>`);
+  $("builtNames").innerHTML = names.join("");
+  $("builtAr").textContent = state.built.map(l => l.ar).join("");
+  $("built").className = "built";
+}
+
+function addBuilt(letter) {
+  if (state.answered || state.built.length >= state.current.word.letters.length + 3) return;
+  state.built.push(letter);
+  renderBuilt();
+}
+
+function undoBuilt(all = false) {
+  if (state.answered) return;
+  state.built = all ? [] : state.built.slice(0, -1);
+  renderBuilt();
+}
+
+function checkReading() {
+  if (state.answered || !state.built.length) return;
+  state.answered = true;
+  const target = state.current.word.letters;
+  const correct = state.built.length === target.length && state.built.every((l, i) => l === target[i]);
+  const wrongBuilt = new Set(state.built.map((l, i) => (l === target[i] ? -1 : i)).filter(i => i >= 0));
+  const wrongTarget = new Set(target.map((l, i) => (state.built[i] === l ? -1 : i)).filter(i => i >= 0));
+  renderBuilt(wrongBuilt);
+  $("built").classList.add(correct ? "correct" : "wrong");
+  document.querySelectorAll(".tile").forEach(b => { b.disabled = true; });
+  showWordFeedback(correct, wrongTarget);
 }
 
 function buildOptions(correct) {
@@ -488,6 +848,10 @@ function buildOptions(correct) {
 
 function nextQuestion() {
   if (state.index >= state.deck.length) return endGame();
+  if (isWordGame()) {
+    state.current = { word: state.deck[state.index] };
+    return renderWord();
+  }
   state.current = { letter: state.deck[state.index], form: pick(settings.forms) };
   renderQuestion();
 }
@@ -496,10 +860,7 @@ function renderQuestion() {
   const { letter, form } = state.current;
   state.answered = false;
 
-  $("count").textContent = state.index + 1;
-  $("bar").style.width = (state.index / state.deck.length * 100) + "%";
-  $("score").textContent = state.score;
-  $("streak").textContent = state.streak;
+  updateStats();
   $("formTag").textContent = FORM_LABELS[form];
   $("feedback").classList.add("hidden");
 
@@ -546,27 +907,19 @@ function answer(btn, chosen) {
     if (b.dataset.name === letter.name) b.classList.add("correct");
   });
 
-  if (correct) {
-    state.score++;
-    state.streak++;
-    $("fbMsg").textContent = pick(["Correct! 🎉", "Great job! ⭐", "Well done! 👏", "Excellent! 🌟"]);
-    $("fbMsg").className = "msg good";
-  } else {
+  recordResult(correct, letter);
+  if (!correct) {
     btn.classList.add("wrong");
-    state.streak = 0;
-    if (!state.missed.includes(letter)) state.missed.push(letter);
-    $("fbMsg").innerHTML = `Not quite — it's <b>${letter.name}</b> <span style="font-family:'Noto Naskh Arabic'">${letter.ar}</span>`;
-    $("fbMsg").className = "msg bad";
+    $("fbMsg").innerHTML = `Not quite — it's <b>${letter.name}</b> <span class="arf">${letter.ar}</span>`;
   }
 
   $("fbExample").innerHTML =
     `${letter.emoji} <span class="word">${letter.word}</span> — ${letter.meaning}`;
+  $("fbForms").className = "forms-row";
   $("fbForms").innerHTML = ["isolated", "initial", "medial", "final"].map(f =>
     `<span style="${f === form ? "color:var(--accent)" : ""}">${shape(letter.ar, f)}<small>${FORM_LABELS[f]}</small></span>`
   ).join("");
 
-  $("score").textContent = state.score;
-  $("streak").textContent = state.streak;
   $("feedback").classList.remove("hidden");
   $("nextBtn").focus();
   speak(letter.ar);
@@ -578,8 +931,10 @@ function endGame() {
   $("finalScore").textContent = `${state.score} / ${total}`;
   $("missedWrap").classList.toggle("hidden", !state.missed.length);
   $("retryMissedBtn").classList.toggle("hidden", !state.missed.length);
-  $("missed").innerHTML = state.missed.map(l =>
-    `<div><div class="ar">${l.ar}</div>${l.name}</div>`).join("");
+  $("missedTitle").textContent = isWordGame() ? "Words to review:" : "Letters to review:";
+  $("missed").innerHTML = state.missed.map(item => isWordGame()
+    ? `<div><div class="ar">${item.ar}</div>${item.emoji} ${item.meaning}</div>`
+    : `<div><div class="ar">${item.ar}</div>${item.name}</div>`).join("");
   show("summary");
 }
 
@@ -611,7 +966,7 @@ function onFormsChange(e) {
   settings.forms = forms;
   saveSettings();
   // If the current letter's form was just switched off, re-draw it in an allowed form.
-  if (state.current && !state.answered && !forms.includes(state.current.form)) {
+  if (!isWordGame() && state.current && !state.answered && !forms.includes(state.current.form)) {
     state.current.form = pick(forms);
     renderQuestion();
   }
@@ -641,8 +996,13 @@ function updateLettersFooter() {
   const changed = n !== settings.letters.size || [...pendingLetters].some(a => !settings.letters.has(a));
   $("letterCount").textContent = `(${n} of ${LETTERS.length})`;
   $("applyLettersBtn").disabled = !n || !changed;
-  $("lettersHint").textContent = !n ? "Pick at least one letter."
-    : changed ? "Your score resets when you restart." : "";
+  let hint = !n ? "Pick at least one letter." : changed ? "Your score resets when you restart." : "";
+  if (n && isWordGame()) {
+    const only = WORDS.filter(w => w.letters.every(l => l.extra || pendingLetters.has(l.ar))).length;
+    hint = (only >= 3 ? `${only} words use only these letters. `
+      : "Few words use only these letters, so words containing them are included. ") + hint;
+  }
+  $("lettersHint").textContent = hint;
 }
 
 function setAllLetters(on) {
@@ -675,12 +1035,37 @@ $("menuBtn").addEventListener("click", goHome);
 $("homeBtn").addEventListener("click", goHome);
 $("speakBtn").addEventListener("click", () => speak(state.current.letter.ar));
 
+// Word games
+$("checkSpellBtn").addEventListener("click", checkSpelling);
+$("spellInput").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !state.answered) { e.preventDefault(); e.stopPropagation(); checkSpelling(); }
+});
+$("oskToggle").addEventListener("click", () => {
+  settings.osk = !settings.osk;
+  saveSettings();
+  renderOsk();
+});
+renderOsk();
+document.querySelectorAll("#readArea [data-mode]").forEach(b => b.addEventListener("click", () => {
+  settings.tileMode = b.dataset.mode;
+  saveSettings();
+  renderTiles();
+}));
+$("undoBtn").addEventListener("click", () => undoBuilt());
+$("clearBtn").addEventListener("click", () => undoBuilt(true));
+$("checkReadBtn").addEventListener("click", checkReading);
+
 document.addEventListener("keydown", e => {
   if ($("game").classList.contains("hidden")) return;
   if ($("settings").contains(e.target)) return; // don't answer while using the settings panel
-  if (!state.answered && /^[1-4]$/.test(e.key)) {
+  if (!state.answered && !isWordGame() && /^[1-4]$/.test(e.key)) {
     const btn = document.querySelectorAll(".option")[+e.key - 1];
     if (btn) btn.click();
+  } else if (!state.answered && state.game === "read" && e.key === "Backspace") {
+    e.preventDefault();
+    undoBuilt();
+  } else if (!state.answered && state.game === "read" && e.key === "Enter" && e.target.tagName !== "BUTTON") {
+    checkReading();
   } else if (state.answered && (e.key === "Enter" || e.key === " ") && e.target !== $("nextBtn")) {
     e.preventDefault();
     $("nextBtn").click();
