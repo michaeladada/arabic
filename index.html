@@ -222,6 +222,7 @@
   }
   .letter-chip .arf { font-size: 1.8rem; line-height: 1.4; }
   .letter-chip small { font-size: .75rem; direction: ltr; }
+  .letter-chip.extra { background: #fff7e6; }
   .letter-chip[aria-pressed="true"] { opacity: 1; background: #f1ecff; border-color: var(--accent); }
   .letter-chip:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .letters-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
@@ -361,6 +362,7 @@
         <h3>Letters <span class="muted" id="letterCount"></span></h3>
         <div>
           <button class="btn secondary small" id="allLettersBtn">All</button>
+          <button class="btn secondary small" id="basicLettersBtn">Basic 28</button>
           <button class="btn secondary small" id="noLettersBtn">None</button>
         </div>
       </div>
@@ -478,16 +480,24 @@ const LETTERS = [
   { ar: "ي", name: "yaa",   word: "يقطين",  meaning: "pumpkin",    emoji: "🎃", group: "b" },
 ];
 // Extra letter shapes that appear in real words: hamza forms, taa marbuta, alif maqsura.
-// They are used in the word games only (they don't have the full set of joining forms).
+// `forms` lists the shapes a letter really has (the 28 main letters have all four).
 const EXTRA_LETTERS = [
-  { ar: "ء", name: "hamza",          group: "hamza", note: "a glottal stop — a short catch in the throat" },
-  { ar: "أ", name: "alif-hamza",     group: "alif",  note: "hamza sitting on top of alif" },
-  { ar: "إ", name: "alif-hamza below", group: "alif", note: "hamza under alif (an \"i\" sound at the start)" },
-  { ar: "آ", name: "alif-madda",     group: "alif",  note: "a long \"aa\" — alif with a wavy madda on top" },
-  { ar: "ؤ", name: "waaw-hamza",     group: "r",     note: "hamza sitting on waaw" },
-  { ar: "ئ", name: "yaa-hamza",      group: "b",     note: "hamza on a dotless yaa" },
-  { ar: "ة", name: "taa marbuta",    group: "h",     note: "\"tied taa\" — only at the end of a word, usually sounds like \"a\"" },
-  { ar: "ى", name: "alif maqsura",   group: "b",     note: "a dotless yaa at the end of a word that sounds like \"aa\"" },
+  { ar: "ء", name: "hamza",          group: "hamza", word: "ماء",   forms: ["isolated"],
+    note: "a glottal stop — a short catch in the throat" },
+  { ar: "أ", name: "alif-hamza",     group: "alif",  word: "أسد",
+    note: "hamza sitting on top of alif" },
+  { ar: "إ", name: "alif-hamza below", group: "alif", word: "إبرة",
+    note: "hamza under alif (an \"i\" sound at the start)" },
+  { ar: "آ", name: "alif-madda",     group: "alif",  word: "مرآة",
+    note: "a long \"aa\" — alif with a wavy madda on top" },
+  { ar: "ؤ", name: "waaw-hamza",     group: "r",     word: "لؤلؤ",
+    note: "hamza sitting on waaw" },
+  { ar: "ئ", name: "yaa-hamza",      group: "b",     word: "ذئب",
+    note: "hamza on a dotless yaa" },
+  { ar: "ة", name: "taa marbuta",    group: "h",     word: "تفاحة", forms: ["isolated", "final"],
+    note: "\"tied taa\" — only at the end of a word, usually sounds like \"a\"" },
+  { ar: "ى", name: "alif maqsura",   group: "b",     word: "مستشفى", forms: ["isolated", "final"],
+    note: "a dotless yaa at the end of a word that sounds like \"aa\"" },
 ].map(l => ({ ...l, extra: true }));
 const ALL_LETTERS = [...LETTERS, ...EXTRA_LETTERS];
 const LETTER_BY_AR = Object.fromEntries(ALL_LETTERS.map(l => [l.ar, l]));
@@ -527,6 +537,95 @@ const WORDS = [
   ["فراشة", "butterfly", "🦋"], ["شجرة", "tree", "🌳"],  ["سيارة", "car", "🚗"],
   ["مدرسة", "school", "🏫"], ["بقرة", "cow", "🐄"],     ["مستشفى", "hospital", "🏥"],
   ["موسيقى", "music", "🎵"],
+  // Colours, numbers, people, body, animals, food, home, clothes, school, places, time, everyday words
+  ["أحمر", "red", "🔴"], ["أزرق", "blue", "🔵"], ["أخضر", "green", "🟢"],
+  ["أصفر", "yellow", "🟡"], ["أسود", "black", "⚫"], ["أبيض", "white", "⚪"],
+  ["برتقالي", "orange (colour)", "🟠"], ["بني", "brown", "🟤"], ["وردي", "pink", "🩷"],
+  ["بنفسجي", "purple", "🟣"], ["رمادي", "grey", "🩶"], ["ذهبي", "golden", "✨"],
+  ["فضي", "silver", "🥈"], ["واحد", "one", "1️⃣"], ["اثنان", "two", "2️⃣"],
+  ["ثلاثة", "three", "3️⃣"], ["أربعة", "four", "4️⃣"], ["خمسة", "five", "5️⃣"],
+  ["ستة", "six", "6️⃣"], ["سبعة", "seven", "7️⃣"], ["ثمانية", "eight", "8️⃣"],
+  ["تسعة", "nine", "9️⃣"], ["عشرة", "ten", "🔟"], ["أب", "father", "👨"],
+  ["أم", "mother", "👩"], ["أخ", "brother", "🧑"], ["أخت", "sister", "👧"],
+  ["جد", "grandfather", "👴"], ["جدة", "grandmother", "👵"], ["رجل", "man", "🧔"],
+  ["امرأة", "woman", "👩‍🦱"], ["صديق", "friend", "🤝"], ["معلم", "teacher", "🧑‍🏫"],
+  ["طبيب", "doctor", "🧑‍⚕️"], ["عائلة", "family", "👨‍👩‍👧"], ["طالب", "student", "🧑‍🎓"],
+  ["ملك", "king", "🤴"], ["رأس", "head", "🗣️"], ["أنف", "nose", "👃"],
+  ["أذن", "ear", "👂"], ["لسان", "tongue", "👅"], ["سن", "tooth", "🦷"],
+  ["قدم", "foot", "🦶"], ["ظهر", "back", "🧍"], ["بطن", "belly", "🫃"],
+  ["عظم", "bone", "🦴"], ["دم", "blood", "🩸"], ["كتف", "shoulder", "🤷"],
+  ["ركبة", "knee", "🦵"], ["شفة", "lip", "💋"], ["شعر", "hair", "💇"],
+  ["قرد", "monkey", "🐒"], ["فأر", "mouse", "🐭"], ["بطة", "duck", "🦆"],
+  ["دجاجة", "chicken", "🐔"], ["حمار", "donkey", "🫏"], ["ثور", "bull", "🐂"],
+  ["زرافة", "giraffe", "🦒"], ["تمساح", "crocodile", "🐊"], ["ثعبان", "snake", "🐍"],
+  ["سلحفاة", "turtle", "🐢"], ["نحلة", "bee", "🐝"], ["نملة", "ant", "🐜"],
+  ["عنكبوت", "spider", "🕷️"], ["بومة", "owl", "🦉"], ["ببغاء", "parrot", "🦜"],
+  ["حمامة", "dove", "🕊️"], ["طاووس", "peacock", "🦚"], ["دلفين", "dolphin", "🐬"],
+  ["قرش", "shark", "🦈"], ["أخطبوط", "octopus", "🐙"], ["خنزير", "pig", "🐖"],
+  ["كنغر", "kangaroo", "🦘"], ["باندا", "panda", "🐼"], ["خفاش", "bat", "🦇"],
+  ["عصفور", "sparrow", "🐦"], ["طائر", "bird", "🐤"], ["ماعز", "goat", "🐐"],
+  ["قنفذ", "hedgehog", "🦔"], ["حلزون", "snail", "🐌"], ["ذبابة", "fly", "🪰"],
+  ["بعوضة", "mosquito", "🦟"], ["سنجاب", "squirrel", "🐿️"], ["أرز", "rice", "🍚"],
+  ["لحم", "meat", "🥩"], ["جبن", "cheese", "🧀"], ["زبدة", "butter", "🧈"],
+  ["سكر", "sugar", "🍬"], ["ملح", "salt", "🧂"], ["فلفل", "pepper", "🌶️"],
+  ["طماطم", "tomatoes", "🍅"], ["بطاطا", "potatoes", "🥔"], ["جوز", "walnuts", "🌰"],
+  ["برتقال", "oranges", "🍊"], ["خوخ", "peaches", "🍑"], ["كرز", "cherries", "🍒"],
+  ["إجاص", "pears", "🍐"], ["مانجو", "mango", "🥭"], ["أفوكادو", "avocado", "🥑"],
+  ["فطر", "mushrooms", "🍄"], ["خس", "lettuce", "🥬"], ["باذنجان", "eggplant", "🍆"],
+  ["بروكلي", "broccoli", "🥦"], ["كعكة", "cake", "🎂"], ["حلوى", "sweets", "🍭"],
+  ["شوكولاتة", "chocolate", "🍫"], ["بسكويت", "biscuits", "🍪"], ["شطيرة", "sandwich", "🥪"],
+  ["بيتزا", "pizza", "🍕"], ["عصير", "juice", "🧃"], ["مربى", "jam", "🫙"],
+  ["زيت", "oil", "🫗"], ["حساء", "soup", "🍲"], ["فطيرة", "pie", "🥧"],
+  ["بوظة", "ice cream", "🍦"], ["فشار", "popcorn", "🍿"], ["غرفة", "room", "🛋️"],
+  ["مطبخ", "kitchen", "🍳"], ["حمام", "bathroom", "🛁"], ["نافذة", "window", "🪟"],
+  ["طاولة", "table", "🍽️"], ["كأس", "glass", "🥛"], ["كوب", "cup", "☕"],
+  ["ملعقة", "spoon", "🥄"], ["شوكة", "fork", "🍴"], ["ساعة", "clock", "⏰"],
+  ["مصباح", "lamp", "🪔"], ["مظلة", "umbrella", "☂️"], ["مقص", "scissors", "✂️"],
+  ["صابون", "soap", "🧼"], ["فرشاة", "brush", "🪥"], ["مشط", "comb", "🪮"],
+  ["مرحاض", "toilet", "🚽"], ["وسادة", "pillow", "🛏️"], ["بطانية", "blanket", "🛌"],
+  ["صندوق", "box", "📦"], ["شمعة", "candle", "🕯️"], ["جرس", "bell", "🔔"],
+  ["حاسوب", "computer", "💻"], ["تلفاز", "television", "📺"], ["ثلاجة", "fridge", "🧊"],
+  ["كاميرا", "camera", "📷"], ["مكنسة", "broom", "🧹"], ["قفل", "lock", "🔒"],
+  ["سلم", "ladder", "🪜"], ["قميص", "shirt", "👕"], ["بنطال", "trousers", "👖"],
+  ["فستان", "dress", "👗"], ["حذاء", "shoe", "👞"], ["قبعة", "hat", "🧢"],
+  ["جوارب", "socks", "🧦"], ["نظارة", "glasses", "👓"], ["خاتم", "ring", "💍"],
+  ["تاج", "crown", "👑"], ["وشاح", "scarf", "🧣"], ["قفاز", "glove", "🧤"],
+  ["معطف", "coat", "🧥"], ["دفتر", "notebook", "📓"], ["ورقة", "paper", "📄"],
+  ["مكتب", "desk", "🗄️"], ["مسطرة", "ruler", "📏"], ["رسالة", "letter (mail)", "📨"],
+  ["خريطة", "map", "🗺️"], ["جريدة", "newspaper", "📰"], ["مكتبة", "library", "📚"],
+  ["درس", "lesson", "📝"], ["سؤال", "question", "❓"], ["جواب", "answer", "💬"],
+  ["اسم", "name", "🏷️"], ["لغة", "language", "🗣️"], ["عربي", "Arabic", "🔤"],
+  ["جبل", "mountain", "⛰️"], ["نهر", "river", "🏞️"], ["بحيرة", "lake", "🛶"],
+  ["صحراء", "desert", "🏜️"], ["غابة", "forest", "🌲"], ["جزيرة", "island", "🏝️"],
+  ["أرض", "earth", "🌍"], ["رمل", "sand", "⏳"], ["حجر", "stone", "🪨"],
+  ["ريح", "wind", "🌬️"], ["برق", "lightning", "⚡"], ["رعد", "thunder", "⛈️"],
+  ["زهرة", "flower (blossom)", "🌼"], ["عشب", "grass", "🌱"], ["بركان", "volcano", "🌋"],
+  ["موجة", "wave", "🌊"], ["شاطئ", "beach", "🏖️"], ["مدينة", "city", "🏙️"],
+  ["قرية", "village", "🏘️"], ["شارع", "street", "🛣️"], ["سوق", "market", "🛒"],
+  ["مطعم", "restaurant", "🍝"], ["حديقة", "garden", "🌷"], ["ملعب", "playground", "🏟️"],
+  ["مطار", "airport", "🛫"], ["بنك", "bank", "🏦"], ["فندق", "hotel", "🏨"],
+  ["جسر", "bridge", "🌉"], ["قلعة", "castle", "🏰"], ["خيمة", "tent", "⛺"],
+  ["كوكب", "planet", "🪐"], ["حافلة", "bus", "🚌"], ["قارب", "boat", "🚤"],
+  ["طريق", "road", "🛤️"], ["شاحنة", "truck", "🚚"], ["إسعاف", "ambulance", "🚑"],
+  ["مروحية", "helicopter", "🚁"], ["يوم", "day", "📅"], ["ليل", "night", "🌃"],
+  ["نهار", "daytime", "🌞"], ["صباح", "morning", "🌅"], ["مساء", "evening", "🌆"],
+  ["أسبوع", "week", "🗓️"], ["شهر", "month", "🈷️"], ["سنة", "year", "📆"],
+  ["صيف", "summer", "🩱"], ["شتاء", "winter", "⛄"], ["ربيع", "spring", "🌸"],
+  ["خريف", "autumn", "🍂"], ["كبير", "big", "🐘"], ["صغير", "small", "🐜"],
+  ["طويل", "tall", "🦒"], ["قصير", "short", "🩳"], ["حار", "hot", "🥵"],
+  ["بارد", "cold", "🥶"], ["جديد", "new", "🆕"], ["قديم", "old", "🏚️"],
+  ["سعيد", "happy", "😊"], ["حزين", "sad", "😢"], ["جميل", "beautiful", "😍"],
+  ["سريع", "fast", "🐆"], ["بطيء", "slow", "🐌"], ["جائع", "hungry", "😋"],
+  ["عطشان", "thirsty", "🥤"], ["نظيف", "clean", "✨"], ["مريض", "sick", "🤒"],
+  ["نعم", "yes", "✅"], ["لا", "no", "❌"], ["سلام", "peace", "☮️"],
+  ["شكرا", "thank you", "🙏"], ["مرحبا", "hello", "👋"], ["أهلا", "welcome", "🤗"],
+  ["حب", "love", "💕"], ["نوم", "sleep", "😴"], ["أكل", "food", "🍛"],
+  ["لعب", "playing", "🎲"], ["كرة", "ball", "⚽"], ["دمية", "doll", "🪆"],
+  ["لعبة", "toy", "🧸"], ["رسم", "drawing", "🎨"], ["صورة", "picture", "🖼️"],
+  ["فيلم", "film", "🎬"], ["أغنية", "song", "🎶"], ["طبل", "drum", "🥁"],
+  ["عود", "oud", "🪕"], ["هدف", "goal", "🥅"], ["سباحة", "swimming", "🏊"],
+  ["رياضة", "sport", "🏅"], ["عيد", "festival", "🎉"], ["حفلة", "party", "🥳"],
+  ["بالون", "balloon", "🎈"],
 ].map(([ar, meaning, emoji]) => ({ ar, meaning, emoji, letters: [...ar].map(c => LETTER_BY_AR[c]) }));
 
 // How each word sounds, in English letters. Capitals mark the "heavy" letters
@@ -552,9 +651,67 @@ const SAY = {
   "فراولة": "faraawla", "نجمة": "najma", "هدية": "hadiyya", "وردة": "warda", "دراجة": "darraaja",
   "حقيبة": "Haqiiba", "قهوة": "qahwa", "فراشة": "faraasha", "شجرة": "shajara", "سيارة": "sayyaara",
   "مدرسة": "madrasa", "بقرة": "baqara", "مستشفى": "mustashfaa", "موسيقى": "muusiiqaa",
+  "أحمر": "'aHmar", "أزرق": "'azraq", "أخضر": "'akhDar", "أصفر": "'aSfar", "أسود": "'aswad",
+  "أبيض": "'abyaD", "برتقالي": "burtuqaalii", "بني": "bunnii", "وردي": "wardii", "بنفسجي": "banafsajii",
+  "رمادي": "ramaadii", "ذهبي": "dhahabii", "فضي": "fiDDii", "واحد": "waaHid", "اثنان": "ithnaan",
+  "ثلاثة": "thalaatha", "أربعة": "'arbaʿa", "خمسة": "khamsa", "ستة": "sitta", "سبعة": "sabʿa",
+  "ثمانية": "thamaaniya", "تسعة": "tisʿa", "عشرة": "ʿashara", "أب": "'ab", "أم": "'umm",
+  "أخ": "'akh", "أخت": "'ukht", "جد": "jadd", "جدة": "jadda", "رجل": "rajul",
+  "امرأة": "imra'a", "صديق": "Sadiiq", "معلم": "muʿallim", "طبيب": "Tabiib", "عائلة": "ʿaa'ila",
+  "طالب": "Taalib", "ملك": "malik", "رأس": "ra's", "أنف": "'anf", "أذن": "'udhun",
+  "لسان": "lisaan", "سن": "sinn", "قدم": "qadam", "ظهر": "DHahr", "بطن": "baTn",
+  "عظم": "ʿaDHm", "دم": "dam", "كتف": "katif", "ركبة": "rukba", "شفة": "shafa",
+  "شعر": "shaʿr", "قرد": "qird", "فأر": "fa'r", "بطة": "baTTa", "دجاجة": "dajaaja",
+  "حمار": "Himaar", "ثور": "thawr", "زرافة": "zaraafa", "تمساح": "timsaaH", "ثعبان": "thuʿbaan",
+  "سلحفاة": "sulaHfaa", "نحلة": "naHla", "نملة": "namla", "عنكبوت": "ʿankabuut", "بومة": "buuma",
+  "ببغاء": "babbaghaa'", "حمامة": "Hamaama", "طاووس": "Taawuus", "دلفين": "dulfiin", "قرش": "qirsh",
+  "أخطبوط": "'ukhTubuuT", "خنزير": "khinziir", "كنغر": "kanghar", "باندا": "baandaa", "خفاش": "khuffaash",
+  "عصفور": "ʿuSfuur", "طائر": "Taa'ir", "ماعز": "maaʿiz", "قنفذ": "qunfudh", "حلزون": "Halazuun",
+  "ذبابة": "dhubaaba", "بعوضة": "baʿuuDa", "سنجاب": "sinjaab", "أرز": "'aruzz", "لحم": "laHm",
+  "جبن": "jubn", "زبدة": "zubda", "سكر": "sukkar", "ملح": "milH", "فلفل": "filfil",
+  "طماطم": "TamaaTim", "بطاطا": "baTaaTaa", "جوز": "jawz", "برتقال": "burtuqaal", "خوخ": "khawkh",
+  "كرز": "karaz", "إجاص": "'ijjaaS", "مانجو": "maanjuu", "أفوكادو": "'afuukaaduu", "فطر": "fuTr",
+  "خس": "khass", "باذنجان": "baadhinjaan", "بروكلي": "bruukulii", "كعكة": "kaʿka", "حلوى": "Halwaa",
+  "شوكولاتة": "shuukuulaata", "بسكويت": "baskawiit", "شطيرة": "shaTiira", "بيتزا": "biitzaa", "عصير": "ʿaSiir",
+  "مربى": "murabbaa", "زيت": "zayt", "حساء": "Hasaa'", "فطيرة": "faTiira", "بوظة": "buuDHa",
+  "فشار": "fushaar", "غرفة": "ghurfa", "مطبخ": "maTbakh", "حمام": "Hammaam", "نافذة": "naafidha",
+  "طاولة": "Taawila", "كأس": "ka's", "كوب": "kuub", "ملعقة": "milʿaqa", "شوكة": "shawka",
+  "ساعة": "saaʿa", "مصباح": "miSbaaH", "مظلة": "miDHalla", "مقص": "miqaSS", "صابون": "Saabuun",
+  "فرشاة": "furshaa", "مشط": "mushT", "مرحاض": "mirHaaD", "وسادة": "wisaada", "بطانية": "baTTaaniyya",
+  "صندوق": "Sunduuq", "شمعة": "shamʿa", "جرس": "jaras", "حاسوب": "Haasuub", "تلفاز": "tilfaaz",
+  "ثلاجة": "thallaaja", "كاميرا": "kaamiiraa", "مكنسة": "miknasa", "قفل": "qufl", "سلم": "sullam",
+  "قميص": "qamiiS", "بنطال": "binTaal", "فستان": "fustaan", "حذاء": "Hidhaa'", "قبعة": "qubbaʿa",
+  "جوارب": "jawaarib", "نظارة": "naDHDHaara", "خاتم": "khaatim", "تاج": "taaj", "وشاح": "wishaaH",
+  "قفاز": "quffaaz", "معطف": "miʿTaf", "دفتر": "daftar", "ورقة": "waraqa", "مكتب": "maktab",
+  "مسطرة": "misTara", "رسالة": "risaala", "خريطة": "khariiTa", "جريدة": "jariida", "مكتبة": "maktaba",
+  "درس": "dars", "سؤال": "su'aal", "جواب": "jawaab", "اسم": "ism", "لغة": "lugha",
+  "عربي": "ʿarabii", "جبل": "jabal", "نهر": "nahr", "بحيرة": "buHayra", "صحراء": "SaHraa'",
+  "غابة": "ghaaba", "جزيرة": "jaziira", "أرض": "'arD", "رمل": "raml", "حجر": "Hajar",
+  "ريح": "riiH", "برق": "barq", "رعد": "raʿd", "زهرة": "zahra", "عشب": "ʿushb",
+  "بركان": "burkaan", "موجة": "mawja", "شاطئ": "shaaTi'", "مدينة": "madiina", "قرية": "qarya",
+  "شارع": "shaariʿ", "سوق": "suuq", "مطعم": "maTʿam", "حديقة": "Hadiiqa", "ملعب": "malʿab",
+  "مطار": "maTaar", "بنك": "bank", "فندق": "funduq", "جسر": "jisr", "قلعة": "qalʿa",
+  "خيمة": "khayma", "كوكب": "kawkab", "حافلة": "Haafila", "قارب": "qaarib", "طريق": "Tariiq",
+  "شاحنة": "shaaHina", "إسعاف": "'isʿaaf", "مروحية": "marwaHiyya", "يوم": "yawm", "ليل": "layl",
+  "نهار": "nahaar", "صباح": "SabaaH", "مساء": "masaa'", "أسبوع": "'usbuuʿ", "شهر": "shahr",
+  "سنة": "sana", "صيف": "Sayf", "شتاء": "shitaa'", "ربيع": "rabiiʿ", "خريف": "khariif",
+  "كبير": "kabiir", "صغير": "Saghiir", "طويل": "Tawiil", "قصير": "qaSiir", "حار": "Haarr",
+  "بارد": "baarid", "جديد": "jadiid", "قديم": "qadiim", "سعيد": "saʿiid", "حزين": "Haziin",
+  "جميل": "jamiil", "سريع": "sariiʿ", "بطيء": "baTii'", "جائع": "jaa'iʿ", "عطشان": "ʿaTshaan",
+  "نظيف": "naDHiif", "مريض": "mariiD", "نعم": "naʿam", "لا": "laa", "سلام": "salaam",
+  "شكرا": "shukran", "مرحبا": "marHaban", "أهلا": "'ahlan", "حب": "Hubb", "نوم": "nawm",
+  "أكل": "'akl", "لعب": "laʿib", "كرة": "kura", "دمية": "dumya", "لعبة": "luʿba",
+  "رسم": "rasm", "صورة": "Suura", "فيلم": "film", "أغنية": "'ughniya", "طبل": "Tabl",
+  "عود": "ʿuud", "هدف": "hadaf", "سباحة": "sibaaHa", "رياضة": "riyaaDa", "عيد": "ʿiid",
+  "حفلة": "Hafla", "بالون": "baaluun",
 };
 for (const w of WORDS) w.say = SAY[w.ar];
-for (const l of LETTERS) l.say = SAY[l.word];
+for (const l of ALL_LETTERS) l.say = SAY[l.word];
+for (const l of EXTRA_LETTERS) {           // example picture/meaning come from the word list
+  const w = WORDS.find(w => w.ar === l.word);
+  l.emoji = w.emoji;
+  l.meaning = w.meaning;
+}
 
 // Render a pronunciation, underlining the heavy letters.
 function sayHtml(say) {
@@ -567,9 +724,10 @@ const WORD_GAMES = new Set(["spell", "read"]);
 const WORDS_PER_ROUND = 10;
 
 // Letters that never join to the following letter.
-const NON_CONNECTORS = new Set(["ا", "د", "ذ", "ر", "ز", "و"]);
+const NON_CONNECTORS = new Set(["ا", "د", "ذ", "ر", "ز", "و", "أ", "إ", "آ", "ؤ", "ء"]);
 
 const ZWJ = "\u200D"; // zero-width joiner forces the contextual shape
+const formsOf = letter => letter.forms || ["isolated", "initial", "medial", "final"];
 const FORM_LABELS = { isolated: "Isolated", initial: "Beginning", medial: "Middle", final: "End" };
 
 function shape(letter, form) {
@@ -611,15 +769,17 @@ const settings = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
     const forms = (saved.forms || []).filter(f => ALL_FORMS.includes(f));
-    const letters = (saved.letters || []).filter(a => LETTERS.some(l => l.ar === a));
+    const letters = (saved.letters || []).filter(a => LETTER_BY_AR[a]);
+    // Settings saved before the extra letters existed: switch them on.
+    if (letters.length && saved.v !== 2) letters.push(...EXTRA_LETTERS.map(l => l.ar));
     return {
       forms: forms.length ? forms : [...ALL_FORMS],
-      letters: new Set(letters.length ? letters : LETTERS.map(l => l.ar)),
+      letters: new Set(letters.length ? letters : ALL_LETTERS.map(l => l.ar)),
       osk: saved.osk === true,
       tileMode: saved.tileMode === "all" ? "all" : "easy",
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(LETTERS.map(l => l.ar)), osk: false, tileMode: "easy" };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, tileMode: "easy" };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -629,18 +789,19 @@ function saveSettings() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       ...settings,
+      v: 2,
       letters: [...settings.letters],
     }));
   } catch { /* storage unavailable — settings just won't persist */ }
 }
 
-const selectedLetters = () => LETTERS.filter(l => settings.letters.has(l.ar));
+const selectedLetters = () => ALL_LETTERS.filter(l => settings.letters.has(l.ar));
 
 // Words made only from the given letters; if too few, any word using at least one of them.
 function wordsFor(letterSet) {
-  const only = WORDS.filter(w => w.letters.every(l => l.extra || letterSet.has(l.ar)));
+  const only = WORDS.filter(w => w.letters.every(l => letterSet.has(l.ar)));
   if (only.length >= 3) return only;
-  const some = WORDS.filter(w => w.letters.some(l => !l.extra && letterSet.has(l.ar)));
+  const some = WORDS.filter(w => w.letters.some(l => letterSet.has(l.ar)));
   return some.length ? some : WORDS;
 }
 
@@ -674,7 +835,7 @@ function startGame(game, items = null) {
   state.game = game;
   const chosen = selectedLetters();
   // Wrong answers come from your chosen letters, as long as there are enough of them.
-  state.pool = chosen.length >= 4 ? chosen : LETTERS;
+  state.pool = chosen.length >= 4 ? chosen : ALL_LETTERS;
   state.deck = items ? shuffle(items)
     : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
     : shuffle(chosen);
@@ -873,10 +1034,14 @@ function checkReading() {
   showWordFeedback(correct, wrongTarget);
 }
 
-function buildOptions(correct) {
+function buildOptions(correct, form) {
   // Mix look-alike letters (same shape group) with random ones to keep it challenging.
-  const similar = shuffle(state.pool.filter(l => l !== correct && l.group === correct.group));
-  const others = shuffle(state.pool.filter(l => l !== correct && l.group !== correct.group));
+  // Only use letters that really have this shape (e.g. no ة at the start of a word).
+  const fits = l => l !== correct && formsOf(l).includes(form);
+  let pool = state.pool.filter(fits);
+  if (pool.length < 3) pool = ALL_LETTERS.filter(fits);
+  const similar = shuffle(pool.filter(l => l.group === correct.group));
+  const others = shuffle(pool.filter(l => l.group !== correct.group));
   const distractors = [...similar.slice(0, 2), ...others].slice(0, 3);
   return shuffle([correct, ...distractors]);
 }
@@ -887,8 +1052,15 @@ function nextQuestion() {
     state.current = { word: state.deck[state.index] };
     return renderWord();
   }
-  state.current = { letter: state.deck[state.index], form: pick(settings.forms) };
+  const letter = state.deck[state.index];
+  state.current = { letter, form: pickForm(letter) };
   renderQuestion();
+}
+
+// A random form from the chosen ones that this letter really has (or any it has).
+function pickForm(letter) {
+  const usable = settings.forms.filter(f => formsOf(letter).includes(f));
+  return pick(usable.length ? usable : formsOf(letter));
 }
 
 function renderQuestion() {
@@ -907,7 +1079,9 @@ function renderQuestion() {
   if (state.game === "ar2name") {
     prompt.className = "prompt-ar";
     prompt.textContent = shape(letter.ar, form);
-    sub.textContent = NON_CONNECTORS.has(letter.ar) && (form === "initial" || form === "medial")
+    sub.textContent = letter.ar === "ء" ? "Hamza on its own never joins other letters."
+      : letter.forms ? "This letter only comes at the end of a word."
+      : NON_CONNECTORS.has(letter.ar) && (form === "initial" || form === "medial")
       ? "This letter never joins to the letter after it." : "";
     $("speakBtn").classList.toggle("hidden", !arabicVoice);
   } else {
@@ -917,7 +1091,7 @@ function renderQuestion() {
     $("speakBtn").classList.add("hidden");
   }
 
-  buildOptions(letter).forEach((opt, i) => {
+  buildOptions(letter, form).forEach((opt, i) => {
     const b = document.createElement("button");
     b.className = "option" + (state.game === "name2ar" ? " ar" : "");
     b.dataset.name = opt.name;
@@ -949,9 +1123,10 @@ function answer(btn, chosen) {
   }
 
   $("fbExample").innerHTML =
-    `${letter.emoji} <span class="word">${letter.word}</span> ${sayHtml(letter.say)} — ${letter.meaning}`;
+    `${letter.emoji} <span class="word">${letter.word}</span> ${sayHtml(letter.say)} — ${letter.meaning}` +
+    (letter.note ? `<div class="note"><b>${letter.name}</b>: ${letter.note}</div>` : "");
   $("fbForms").className = "forms-row";
-  $("fbForms").innerHTML = ["isolated", "initial", "medial", "final"].map(f =>
+  $("fbForms").innerHTML = formsOf(letter).map(f =>
     `<span style="${f === form ? "color:var(--accent)" : ""}">${shape(letter.ar, f)}<small>${FORM_LABELS[f]}</small></span>`
   ).join("");
 
@@ -1002,7 +1177,9 @@ function onFormsChange(e) {
   saveSettings();
   // If the current letter's form was just switched off, re-draw it in an allowed form.
   if (!isWordGame() && state.current && !state.answered && !forms.includes(state.current.form)) {
-    state.current.form = pick(forms);
+    const newForm = pickForm(state.current.letter);
+    if (newForm === state.current.form) return; // the letter has no other shape
+    state.current.form = newForm;
     renderQuestion();
   }
 }
@@ -1010,9 +1187,9 @@ function onFormsChange(e) {
 function renderLetterGrid() {
   const grid = $("letterGrid");
   grid.innerHTML = "";
-  LETTERS.forEach(l => {
+  ALL_LETTERS.forEach(l => {
     const b = document.createElement("button");
-    b.className = "letter-chip";
+    b.className = "letter-chip" + (l.extra ? " extra" : "");
     b.setAttribute("aria-pressed", pendingLetters.has(l.ar));
     b.innerHTML = `<span class="arf">${l.ar}</span><small>${l.name}</small>`;
     b.addEventListener("click", () => {
@@ -1029,19 +1206,21 @@ function renderLetterGrid() {
 function updateLettersFooter() {
   const n = pendingLetters.size;
   const changed = n !== settings.letters.size || [...pendingLetters].some(a => !settings.letters.has(a));
-  $("letterCount").textContent = `(${n} of ${LETTERS.length})`;
+  $("letterCount").textContent = `(${n} of ${ALL_LETTERS.length})`;
   $("applyLettersBtn").disabled = !n || !changed;
   let hint = !n ? "Pick at least one letter." : changed ? "Your score resets when you restart." : "";
   if (n && isWordGame()) {
-    const only = WORDS.filter(w => w.letters.every(l => l.extra || pendingLetters.has(l.ar))).length;
+    const only = WORDS.filter(w => w.letters.every(l => pendingLetters.has(l.ar))).length;
     hint = (only >= 3 ? `${only} words use only these letters. `
       : "Few words use only these letters, so words containing them are included. ") + hint;
   }
   $("lettersHint").textContent = hint;
 }
 
-function setAllLetters(on) {
-  pendingLetters = new Set(on ? LETTERS.map(l => l.ar) : []);
+// which: "all" (36), "basic" (the 28 from the chart) or "none"
+function setAllLetters(which) {
+  const list = which === "all" ? ALL_LETTERS : which === "basic" ? LETTERS : [];
+  pendingLetters = new Set(list.map(l => l.ar));
   renderLetterGrid();
 }
 
@@ -1057,8 +1236,9 @@ function applyLetters() {
 renderFormChecks();
 $("formChecks").addEventListener("change", onFormsChange);
 $("settingsBtn").addEventListener("click", () => toggleSettings());
-$("allLettersBtn").addEventListener("click", () => setAllLetters(true));
-$("noLettersBtn").addEventListener("click", () => setAllLetters(false));
+$("allLettersBtn").addEventListener("click", () => setAllLetters("all"));
+$("basicLettersBtn").addEventListener("click", () => setAllLetters("basic"));
+$("noLettersBtn").addEventListener("click", () => setAllLetters("none"));
 $("applyLettersBtn").addEventListener("click", applyLetters);
 
 document.querySelectorAll(".game-card").forEach(c =>
