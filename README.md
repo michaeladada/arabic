@@ -1,2 +1,2 @@
 # arabic
-Lean arabic
+Learn arabic
