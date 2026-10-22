@@ -173,6 +173,9 @@ button {
 @keyframes pulse { 50% { transform: scale(1.08); } }
 .choices-head { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 .seg.wrap { flex-wrap: wrap; }
+#roundSection { margin-bottom: 14px; }
+#roundSection .choices-head { margin-top: 0; }
+#roundSize { flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--accent); }
 #vocabSection .choices-head { margin-top: 0; }
 
 /* Vocabulary */

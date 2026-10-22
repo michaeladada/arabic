@@ -278,7 +278,7 @@ const VOCAB_PART_SIZE = 500;
 const VOCAB_PART_COUNT = 8;           // vocab/words-1.js … words-N.js that exist so far
 const VOCAB_SIZES = Array.from({ length: VOCAB_PART_COUNT }, (_, i) => (i + 1) * VOCAB_PART_SIZE);
 const VOCAB_CHOICE_COUNTS = [4, 6];
-const WORDS_PER_ROUND = 10;
+const ROUND_SIZES = { min: 10, max: 100, step: 10 };   // words per round in word & vocabulary games
 
 // Letters that never join to the following letter.
 const NON_CONNECTORS = new Set(["ا", "د", "ذ", "ر", "ز", "و", "أ", "إ", "آ", "ؤ", "ء"]);
@@ -337,12 +337,14 @@ const settings = (() => {
       osk: saved.osk === true,
       choices: CHOICE_COUNTS.includes(saved.choices) ? saved.choices : 4,
       vocabChoices: VOCAB_CHOICE_COUNTS.includes(saved.vocabChoices) ? saved.vocabChoices : 4,
+      roundSize: Number.isInteger(saved.roundSize) && saved.roundSize >= ROUND_SIZES.min
+        && saved.roundSize <= ROUND_SIZES.max && saved.roundSize % ROUND_SIZES.step === 0 ? saved.roundSize : 10,
       learnNext: Number.isInteger(saved.learnNext) && saved.learnNext >= 0 ? saved.learnNext : 0,
       vocabSize: VOCAB_SIZES.includes(saved.vocabSize) ? saved.vocabSize
         : saved.vocabSize > VOCAB_SIZES.at(-1) ? VOCAB_SIZES.at(-1) : 500,
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: 500, learnNext: 0 };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: 500, learnNext: 0, roundSize: 10 };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -414,6 +416,8 @@ async function startGame(game, items = null) {
   $("choicesSection").classList.toggle("hidden", isWordGame());
   $("lettersSection").classList.toggle("hidden", isVocabGame());
   $("vocabSection").classList.toggle("hidden", !isVocabGame());
+  $("roundSection").classList.toggle("hidden", !isWordGame() && !isVocabGame());
+  renderRoundSize();
   renderChoiceCount();
   renderVocabSize();
   renderLearnInfo();
@@ -425,6 +429,7 @@ async function startGame(game, items = null) {
   else $("game").appendChild($("feedback"));
   show("game");
 
+  state.deck = [];                     // the old round is over (matters while words load)
   if (isVocabGame()) {
     state.answered = true;             // nothing to answer while the words load
     showVocabStatus("Loading words…");
@@ -439,11 +444,11 @@ async function startGame(game, items = null) {
 
   // Learn goes through the list in order, picking up where you left off.
   state.learnFrom = game === "vocab-learn" && !items ? settings.learnNext % state.vocab.length : null;
+  state.retry = !!items;
   state.deck = items ? shuffle(items)
-    : state.learnFrom !== null ? Array.from({ length: Math.min(WORDS_PER_ROUND, state.vocab.length) },
-        (_, i) => state.vocab[(state.learnFrom + i) % state.vocab.length])
-    : isVocabGame() ? shuffle(state.vocab).slice(0, WORDS_PER_ROUND)
-    : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
+    : state.learnFrom !== null ? learnDeck(settings.roundSize)
+    : isVocabGame() ? shuffle(state.vocab).slice(0, settings.roundSize)
+    : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, settings.roundSize)
     : isOrderGame() ? [LETTERS]          // one pass through the whole alphabet
     : shuffle(chosen);
   state.index = 0;
@@ -451,6 +456,35 @@ async function startGame(game, items = null) {
   state.missed = [];
   $("total").textContent = state.deck.length;
   nextQuestion();
+}
+
+// The next n words of the list in order, from where Learn left off.
+function learnDeck(n) {
+  const len = state.vocab.length;
+  return Array.from({ length: Math.min(n, len) }, (_, i) => state.vocab[(state.learnFrom + i) % len]);
+}
+
+function renderRoundSize() {
+  $("roundSize").value = settings.roundSize;
+  $("roundSizeLabel").textContent = settings.roundSize;
+}
+
+// Change the length of the running round: add more words or drop ones not reached yet.
+function resizeRound(n) {
+  settings.roundSize = n;
+  saveSettings();
+  if (!state.deck.length || state.retry || (!isWordGame() && !isVocabGame())) return;
+  if (state.learnFrom !== null) {
+    state.deck = learnDeck(n);
+  } else if (n > state.deck.length) {
+    const inDeck = new Set(state.deck);
+    const pool = isVocabGame() ? state.vocab : wordsFor(settings.letters);
+    state.deck.push(...shuffle(pool.filter(w => !inDeck.has(w))).slice(0, n - state.deck.length));
+  }
+  // Never cut the word you're on (or ones already played).
+  state.deck.length = Math.max(Math.min(n, state.deck.length), state.index + 1);
+  $("total").textContent = state.deck.length;
+  updateStats();
 }
 
 function updateStats() {
@@ -1106,6 +1140,8 @@ $("learnRestartBtn").addEventListener("click", () => {
   toggleSettings(false);
   startGame("vocab-learn");
 });
+$("roundSize").addEventListener("input", e => { $("roundSizeLabel").textContent = e.target.value; });
+$("roundSize").addEventListener("change", e => resizeRound(+e.target.value));
 $("settingsBtn").addEventListener("click", () => toggleSettings());
 $("allLettersBtn").addEventListener("click", () => setAllLetters("all"));
 $("basicLettersBtn").addEventListener("click", () => setAllLetters("basic"));
