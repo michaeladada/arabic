@@ -272,6 +272,8 @@ function sayHtml(say) {
 }
 
 const WORD_GAMES = new Set(["spell", "read"]);
+const ORDER_GAMES = new Set(["order-ar", "order-name"]);
+const ORDER_ROUNDS = 10;
 const WORDS_PER_ROUND = 10;
 
 // Letters that never join to the following letter.
@@ -381,6 +383,7 @@ function speak(text) {
 
 // ---------- Game flow ----------
 const isWordGame = () => WORD_GAMES.has(state.game);
+const isOrderGame = () => ORDER_GAMES.has(state.game);
 
 function startGame(game, items = null) {
   state.game = game;
@@ -389,6 +392,8 @@ function startGame(game, items = null) {
   state.pool = chosen.length >= 4 ? chosen : ALL_LETTERS;
   state.deck = items ? shuffle(items)
     : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
+    : isOrderGame() ? Array(ORDER_ROUNDS).fill(null)   // runs are drawn as you go
+
     : shuffle(chosen);
   state.index = 0;
   state.score = 0;
@@ -399,7 +404,9 @@ function startGame(game, items = null) {
   $("options").classList.toggle("hidden", isWordGame());
   $("spellArea").classList.toggle("hidden", game !== "spell");
   $("readArea").classList.toggle("hidden", game !== "read");
-  $("formsSection").classList.toggle("hidden", isWordGame());
+  $("formsSection").classList.toggle("hidden", isWordGame() || isOrderGame());
+  $("choicesSection").classList.toggle("hidden", isWordGame());
+  $("choicesTitle").textContent = isOrderGame() ? "Letters per question" : "Answer choices";
   // In Read it, show the answer right under Check rather than below the tiles.
   if (game === "read") $("readTools").after($("feedback"));
   else $("game").appendChild($("feedback"));
@@ -592,6 +599,10 @@ function nextQuestion() {
     state.current = { word: state.deck[state.index] };
     return renderWord();
   }
+  if (isOrderGame()) {
+    state.current = { run: state.deck[state.index] || makeRun(), step: 0, mistakes: 0 };
+    return renderOrder();
+  }
   const letter = state.deck[state.index];
   state.current = { letter, form: pickForm(letter) };
   renderQuestion();
@@ -676,14 +687,92 @@ function answer(btn, chosen) {
   speak(letter.ar);
 }
 
+// ---------- Alphabet order games ----------
+// A run of consecutive letters (in alphabet order) from your selected basic letters.
+function makeRun(size = settings.choices) {
+  let list = LETTERS.filter(l => settings.letters.has(l.ar));
+  if (list.length < size) list = LETTERS;
+  const start = Math.floor(Math.random() * (list.length - size + 1));
+  return list.slice(start, start + size);
+}
+
+const orderLabel = l => state.game === "order-ar" ? l.ar : l.name;
+
+function renderOrder() {
+  const { run } = state.current;
+  state.answered = false;
+  updateStats();
+  $("feedback").classList.add("hidden");
+  $("speakBtn").classList.add("hidden");
+  $("formTag").textContent = "Alphabet order";
+  $("promptSub").textContent = "Tap the letters in alphabet order";
+  renderOrderBuilt();
+
+  let mixed = shuffle(run);
+  while (mixed.every((l, i) => l === run[i])) mixed = shuffle(run); // never already in order
+  const opts = $("options");
+  opts.innerHTML = "";
+  opts.dataset.count = run.length;
+  mixed.forEach((l, i) => {
+    const b = document.createElement("button");
+    b.className = "option" + (state.game === "order-ar" ? " ar" : "");
+    b.innerHTML = `<span class="key">${i + 1}</span><span>${orderLabel(l)}</span>`;
+    b.addEventListener("click", () => tapOrder(b, l));
+    opts.appendChild(b);
+  });
+}
+
+// The letters tapped so far, with numbered gaps for the rest.
+function renderOrderBuilt() {
+  const { run, step } = state.current;
+  const prompt = $("prompt");
+  prompt.className = "order-built" + (state.game === "order-ar" ? " ar" : "");
+  prompt.innerHTML = run.map((l, i) => i < step
+    ? `<span>${orderLabel(l)}</span>` : `<span class="placeholder">${i + 1}</span>`).join("");
+}
+
+function tapOrder(btn, letter) {
+  const cur = state.current;
+  if (state.answered || btn.disabled) return;
+  if (letter === cur.run[cur.step]) {
+    btn.classList.add("correct");
+    btn.disabled = true;
+    cur.step++;
+    renderOrderBuilt();
+    if (cur.step === cur.run.length) finishOrder();
+  } else {
+    cur.mistakes++;
+    btn.classList.remove("wrong");
+    void btn.offsetWidth; // restart the shake animation
+    btn.classList.add("wrong");
+    setTimeout(() => btn.classList.remove("wrong"), 400);
+  }
+}
+
+function finishOrder() {
+  const { run, mistakes } = state.current;
+  state.answered = true;
+  document.querySelectorAll(".option").forEach(b => { b.disabled = true; });
+  recordResult(mistakes === 0, run);
+  if (mistakes) $("fbMsg").textContent = `Done, with ${mistakes} mistake${mistakes > 1 ? "s" : ""}`;
+  $("fbExample").textContent = "";
+  $("fbForms").className = "forms-row word";
+  $("fbForms").innerHTML = run.map(l => `<span>${l.ar}<small>${l.name}</small></span>`).join("");
+  $("feedback").classList.remove("hidden");
+  $("nextBtn").focus();
+}
+
 function endGame() {
   $("bar").style.width = "100%";
   const total = state.deck.length;
   $("finalScore").textContent = `${state.score} / ${total}`;
   $("missedWrap").classList.toggle("hidden", !state.missed.length);
   $("retryMissedBtn").classList.toggle("hidden", !state.missed.length);
-  $("missedTitle").textContent = isWordGame() ? "Words to review:" : "Letters to review:";
-  $("missed").innerHTML = state.missed.map(item => isWordGame()
+  $("missedTitle").textContent = isWordGame() ? "Words to review:"
+    : isOrderGame() ? "Sequences to review:" : "Letters to review:";
+  $("missed").innerHTML = state.missed.map(item => isOrderGame()
+    ? `<div><div class="ar">${item.map(l => l.ar).join(" ")}</div>${item.map(l => l.name).join(" · ")}</div>`
+    : isWordGame()
     ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${item.emoji} ${item.meaning}</div>`
     : `<div><div class="ar">${item.ar}</div>${item.name}</div>`).join("");
   show("summary");
@@ -722,7 +811,7 @@ function onFormsChange(e) {
   settings.forms = forms;
   saveSettings();
   // If the current letter's form was just switched off, re-draw it in an allowed form.
-  if (!isWordGame() && state.current && !state.answered && !forms.includes(state.current.form)) {
+  if (!isWordGame() && !isOrderGame() && state.current && !state.answered && !forms.includes(state.current.form)) {
     const newForm = pickForm(state.current.letter);
     if (newForm === state.current.form) return; // the letter has no other shape
     state.current.form = newForm;
@@ -788,7 +877,14 @@ $("choiceCount").addEventListener("click", e => {
   saveSettings();
   renderChoiceCount();
   // Redraw the current question with the new number of choices (answered ones change on Next).
-  if (!isWordGame() && state.current && !state.answered) renderQuestion();
+  if (!state.current || state.answered || isWordGame()) return;
+  if (!isOrderGame()) return renderQuestion();
+  // Order games: redraw a fresh run if nothing has been tapped yet (keep retried runs as they are).
+  if (state.current.step === 0 && !state.deck[state.index]) {
+    state.current.run = makeRun();
+    state.current.mistakes = 0;
+    renderOrder();
+  }
 });
 renderChoiceCount();
 $("settingsBtn").addEventListener("click", () => toggleSettings());

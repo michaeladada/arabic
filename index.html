@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=754d48b0">
+<link rel="stylesheet" href="style.css?v=5f42e4ce">
 </head>
 <body>
 
@@ -31,6 +31,16 @@
         <div class="demo"><span class="en">djiim</span> → <span class="ar">ج</span></div>
         <h3>Name → Arabic</h3>
         <p>See a letter name, pick the Arabic letter.</p>
+      </button>
+      <button class="game-card" data-game="order-ar">
+        <div class="demo"><span class="ar">ا ب ت</span></div>
+        <h3>Alphabet order · Arabic</h3>
+        <p>Tap the Arabic letters in alphabet order.</p>
+      </button>
+      <button class="game-card" data-game="order-name">
+        <div class="demo"><span class="en small">alif · baa · taa</span></div>
+        <h3>Alphabet order · Names</h3>
+        <p>Tap the letter names in alphabet order.</p>
       </button>
     </div>
     <h3 class="group-title">Words</h3>
@@ -71,8 +81,10 @@
           <label><input type="checkbox" value="final" checked> End &nbsp;<b class="arf">ـب</b></label>
         </div>
         <p class="hint">Each letter is shown in a random form from the ones you select. Changes apply right away.</p>
+      </div>
+      <div id="choicesSection">
         <div class="choices-head">
-          <h3>Answer choices</h3>
+          <h3 id="choicesTitle">Answer choices</h3>
           <div class="seg" id="choiceCount" role="group" aria-label="Answer choices">
             <button class="btn secondary small" data-count="4">4</button>
             <button class="btn secondary small" data-count="6">6</button>
@@ -166,6 +178,6 @@
   </section>
 </main>
 
-<script src="app.js?v=bc0322df"></script>
+<script src="app.js?v=c4377655"></script>
 </body>
 </html>
