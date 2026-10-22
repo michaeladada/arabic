@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12873f1c">
+<link rel="stylesheet" href="style.css?v=a3b72cb1">
 </head>
 <body>
 
@@ -54,10 +54,9 @@
     <div class="topbar">
       <div class="stats">
         <span class="pill">✅ <span id="score">0</span></span>
-        <span class="pill">🔥 <span id="streak">0</span></span>
+        <span class="pill"><span id="count">1</span> / <span id="total">28</span></span>
       </div>
       <div class="stats">
-        <span class="pill"><span id="count">1</span> / <span id="total">28</span></span>
         <button class="btn secondary" id="settingsBtn" aria-expanded="false" aria-controls="settings">⚙ Settings</button>
       </div>
     </div>
@@ -139,8 +138,10 @@
         <div class="msg" id="fbMsg"></div>
         <div class="example" id="fbExample"></div>
       </div>
-      <div class="forms-row" id="fbForms"></div>
-      <button class="btn" id="nextBtn">Next →</button>
+      <div class="fb-actions">
+        <div class="forms-row" id="fbForms"></div>
+        <button class="btn" id="nextBtn">Next →</button>
+      </div>
     </div>
   </section>
 
@@ -162,6 +163,6 @@
   </section>
 </main>
 
-<script src="app.js?v=48092092"></script>
+<script src="app.js?v=4716bd04"></script>
 </body>
 </html>

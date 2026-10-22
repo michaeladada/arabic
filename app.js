@@ -306,7 +306,6 @@ const state = {
   deck: [],
   index: 0,
   score: 0,
-  streak: 0,
   missed: [],
   current: null,
   answered: false,
@@ -392,7 +391,6 @@ function startGame(game, items = null) {
     : shuffle(chosen);
   state.index = 0;
   state.score = 0;
-  state.streak = 0;
   state.missed = [];
   $("total").textContent = state.deck.length;
   $("homeBtn").classList.remove("hidden");
@@ -409,22 +407,18 @@ function updateStats() {
   $("count").textContent = Math.min(state.index + 1, state.deck.length);
   $("bar").style.width = (state.index / state.deck.length * 100) + "%";
   $("score").textContent = state.score;
-  $("streak").textContent = state.streak;
 }
 
 function recordResult(correct, item) {
   if (correct) {
     state.score++;
-    state.streak++;
     $("fbMsg").textContent = pick(["Correct! 🎉", "Great job! ⭐", "Well done! 👏", "Excellent! 🌟"]);
     $("fbMsg").className = "msg good";
   } else {
-    state.streak = 0;
     if (!state.missed.includes(item)) state.missed.push(item);
     $("fbMsg").className = "msg bad";
   }
   $("score").textContent = state.score;
-  $("streak").textContent = state.streak;
 }
 
 // ---------- Word games ----------
