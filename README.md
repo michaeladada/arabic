@@ -8,7 +8,7 @@ Open `index.html` in a browser to play.
 - `index.html` – page layout
 - `style.css` – styles
 - `app.js` – letters, words and game logic
-- `vocab/words-1.js`, `words-2.js`, … – A1 vocabulary, 500 words per file, most common first.
+- `vocab/words-1.js`, `words-2.js`, … – Vocabulary, 500 words per file, most common first.
   `app.js` loads only the files needed for the chosen word set, and only when a vocabulary
   game starts. When adding a file, raise `VOCAB_PART_COUNT` in `app.js`.
 

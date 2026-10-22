@@ -316,7 +316,7 @@ const state = {
   current: null,
   answered: false,
   pool: LETTERS,     // letters used for wrong-answer choices this round
-  vocab: [],         // the loaded A1 vocabulary words
+  vocab: [],         // the loaded vocabulary words
   loadToken: 0,      // bumped on every start/go-home so a slow word load can't take over
 };
 
@@ -724,7 +724,7 @@ function answer(btn, chosen) {
   speak(letter.ar);
 }
 
-// ---------- A1 vocabulary games ----------
+// ---------- Vocabulary games ----------
 // The word list is split into files of 500 words (vocab/words-1.js … words-8.js),
 // most common first. Only the files needed for the chosen word set are loaded.
 const VOCAB_VERSION = document.documentElement.dataset.vocab || "";
@@ -755,7 +755,7 @@ async function loadVocab(size) {
 const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 function showVocabStatus(message) {
-  $("formTag").textContent = "A1 vocabulary";
+  $("formTag").textContent = "Vocabulary";
   $("prompt").className = "vocab-status";
   $("prompt").textContent = message;
   $("promptSub").textContent = "";

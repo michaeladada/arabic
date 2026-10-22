@@ -175,7 +175,7 @@ button {
 .seg.wrap { flex-wrap: wrap; }
 #vocabSection .choices-head { margin-top: 0; }
 
-/* A1 vocabulary */
+/* Vocabulary */
 .vocab-status { color: var(--muted); font-size: 1.1rem; margin: 28px 0; }
 .prompt-en.vocab { font-size: clamp(1.8rem, 8vw, 2.8rem); margin: 14px 0; }
 .options .option.vocab-en { font-size: 1.15rem; padding: 14px 8px; }

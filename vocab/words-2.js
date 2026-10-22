@@ -1,4 +1,4 @@
-// A1 vocabulary, words 501–1000 (most common first). Each entry: [Arabic, English, pronunciation].
+// Vocabulary, words 501–1000 (most common first). Each entry: [Arabic, English, pronunciation].
 // Loaded on demand by app.js.
 (window.VOCAB_PARTS = window.VOCAB_PARTS || {})[2] = [
   ["يناير", "January", "yanaayir"],
