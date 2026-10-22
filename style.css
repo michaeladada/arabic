@@ -270,7 +270,7 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .built-names span.bad { background: #ffd6d6; color: #b3261e; }
 .built-names .placeholder { background: none; color: #bbb; font-weight: 400; }
 .built-ar { font-size: 2.6rem; line-height: 1.5; min-height: 1.5em; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 12px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .tile { background: var(--card); border: 3px solid #e6e1ee; padding: 10px 4px; font-weight: 800; font-size: 1.05rem; }
 .tile:hover:not(:disabled) { border-color: var(--accent); }
 .tile:disabled { opacity: .5; cursor: default; }
@@ -285,4 +285,5 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .option { font-size: 1.25rem; }
   .option.ar { font-size: 2.8rem; }
   .fb-actions .forms-row { gap: 8px; font-size: 1.5rem; }
+  .tile { font-size: .9rem; padding: 10px 2px; }
 }
