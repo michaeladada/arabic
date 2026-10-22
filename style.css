@@ -226,7 +226,7 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 /* ---------- Word games ---------- */
 .group-title { margin: 22px 0 10px; color: var(--muted); font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .game-card .demo .en.small { font-size: 1.05rem; }
-.prompt-word { font-family: "Noto Naskh Arabic", serif; font-size: clamp(4rem, 16vw, 7rem); line-height: 1.6; margin: 0; }
+.prompt-word { font-family: "Noto Naskh Arabic", serif; font-size: clamp(3.4rem, 14vw, 6rem); line-height: 1.4; margin: 0; }
 .prompt-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px 0 10px; }
 .name-chip {
   background: #f1ecff; border-radius: 12px; padding: 8px 14px;
@@ -261,17 +261,17 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 
 .built {
   background: var(--card); border: 3px dashed #e6e1ee; border-radius: var(--radius);
-  min-height: 92px; padding: 10px; text-align: center;
+  min-height: 72px; padding: 6px 10px; text-align: center;
 }
 .built.correct { border-style: solid; border-color: var(--good); background: #e7f9ef; }
 .built.wrong { border-style: solid; border-color: var(--bad); background: #fff6f6; }
-.built-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 36px; }
+.built-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 30px; }
 .built-names span { background: #f1ecff; border-radius: 10px; padding: 4px 10px; font-weight: 800; }
 .built-names span.bad { background: #ffd6d6; color: #b3261e; }
 .built-names .placeholder { background: none; color: #bbb; font-weight: 400; }
-.built-ar { font-size: 2.6rem; line-height: 1.5; min-height: 1.5em; }
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.tile { background: var(--card); border: 3px solid #e6e1ee; padding: 10px 4px; font-weight: 800; font-size: 1.05rem; }
+.built-ar { font-size: 2.2rem; line-height: 1.4; min-height: 1.4em; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.tile { background: var(--card); border: 3px solid #e6e1ee; padding: 6px 4px; font-weight: 800; font-size: 1.05rem; }
 .tile:hover:not(:disabled) { border-color: var(--accent); }
 .tile:disabled { opacity: .5; cursor: default; }
 
@@ -285,5 +285,23 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .option { font-size: 1.25rem; }
   .option.ar { font-size: 2.8rem; }
   .fb-actions .forms-row { gap: 8px; font-size: 1.5rem; }
-  .tile { font-size: .9rem; padding: 10px 2px; }
+  .tile { font-size: .9rem; padding: 6px 2px; }
+  /* Tighter spacing everywhere on phones */
+  header { padding: 10px 12px 0; }
+  header h1 { font-size: 1.2rem; }
+  main { padding: 10px 12px; }
+  .stats { gap: 8px; }
+  .stats .pill { padding: 4px 10px; }
+  .topbar .btn { padding: 6px 12px; }
+  .progress { margin: 10px 0; }
+  .prompt-card { padding: 10px 12px; }
+  .prompt-ar { font-size: clamp(5rem, 22vw, 7rem); line-height: 1.35; }
+  .prompt-en { margin: 12px 0; }
+  .prompt-names { margin: 12px 0 6px; }
+  .options { gap: 8px; margin-top: 10px; }
+  .option { padding: 10px 8px; }
+  .word-area { margin-top: 10px; }
+  .area-tools { margin-top: 8px; }
+  .feedback { margin-top: 10px; padding: 10px 12px; gap: 8px; }
+  .osk { gap: 4px; }
 }
