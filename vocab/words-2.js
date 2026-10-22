@@ -214,7 +214,7 @@
   ["وحيد", "alone", "waHiid"],
   ["شجاع", "brave", "shujaaʿ"],
   ["لطيف", "nice", "laTiif"],
-  ["مضحك", "funny", "muDHik"],
+  ["مضحك", "funny", "muD-Hik"],
   ["ممل", "boring", "mumill"],
   ["غريب", "strange", "ghariib"],
   ["عادي", "ordinary", "ʿaadii"],

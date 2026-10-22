@@ -273,9 +273,9 @@ function sayHtml(say) {
 
 const WORD_GAMES = new Set(["spell", "read"]);
 const ORDER_GAMES = new Set(["order-ar", "order-name"]);
-const VOCAB_GAMES = new Set(["vocab-ar2en", "vocab-en2ar"]);
+const VOCAB_GAMES = new Set(["vocab-learn", "vocab-ar2en", "vocab-en2ar"]);
 const VOCAB_PART_SIZE = 500;
-const VOCAB_PART_COUNT = 2;           // vocab/words-1.js … words-N.js that exist so far
+const VOCAB_PART_COUNT = 8;           // vocab/words-1.js … words-N.js that exist so far
 const VOCAB_SIZES = Array.from({ length: VOCAB_PART_COUNT }, (_, i) => (i + 1) * VOCAB_PART_SIZE);
 const VOCAB_CHOICE_COUNTS = [4, 6];
 const WORDS_PER_ROUND = 10;
@@ -337,11 +337,12 @@ const settings = (() => {
       osk: saved.osk === true,
       choices: CHOICE_COUNTS.includes(saved.choices) ? saved.choices : 4,
       vocabChoices: VOCAB_CHOICE_COUNTS.includes(saved.vocabChoices) ? saved.vocabChoices : 4,
+      learnNext: Number.isInteger(saved.learnNext) && saved.learnNext >= 0 ? saved.learnNext : 0,
       vocabSize: VOCAB_SIZES.includes(saved.vocabSize) ? saved.vocabSize
         : saved.vocabSize > VOCAB_SIZES.at(-1) ? VOCAB_SIZES.at(-1) : 500,
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: 500 };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: 500, learnNext: 0 };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -415,6 +416,7 @@ async function startGame(game, items = null) {
   $("vocabSection").classList.toggle("hidden", !isVocabGame());
   renderChoiceCount();
   renderVocabSize();
+  renderLearnInfo();
   // The order games always use the whole alphabet, so they have no settings.
   $("settingsBtn").classList.toggle("hidden", isOrderGame());
   if (isOrderGame()) toggleSettings(false);
@@ -435,7 +437,11 @@ async function startGame(game, items = null) {
     if (token !== state.loadToken) return;
   }
 
+  // Learn goes through the list in order, picking up where you left off.
+  state.learnFrom = game === "vocab-learn" && !items ? settings.learnNext % state.vocab.length : null;
   state.deck = items ? shuffle(items)
+    : state.learnFrom !== null ? Array.from({ length: Math.min(WORDS_PER_ROUND, state.vocab.length) },
+        (_, i) => state.vocab[(state.learnFrom + i) % state.vocab.length])
     : isVocabGame() ? shuffle(state.vocab).slice(0, WORDS_PER_ROUND)
     : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
     : isOrderGame() ? [LETTERS]          // one pass through the whole alphabet
@@ -634,7 +640,7 @@ function nextQuestion() {
   }
   if (isVocabGame()) {
     state.current = { word: state.deck[state.index] };
-    return renderVocab();
+    return state.game === "vocab-learn" ? renderStudy() : renderVocab();
   }
   if (isOrderGame()) {
     state.current = { step: 0, wrongHere: 0 };
@@ -783,14 +789,48 @@ function vocabOptions(word) {
   return shuffle([word, ...picked]);
 }
 
+// Learn: first a card with the word, its pronunciation and meaning; then the quiz.
+function renderStudy() {
+  const { word } = state.current;
+  state.current.studying = true;
+  state.answered = true;                 // no answering until you've seen the word
+  updateStats();
+  $("feedback").classList.add("hidden");
+  const pos = state.learnFrom === null ? null : (state.learnFrom + state.index) % state.vocab.length;
+  $("formTag").textContent = pos === null ? "Review" : `New word · #${pos + 1}`;
+  $("prompt").className = "prompt-word";
+  $("prompt").textContent = word.ar;
+  $("promptSub").innerHTML = `<div class="study-meaning">${sayHtml(word.say)} <b>${escapeHtml(word.en)}</b></div>`;
+  $("speakBtn").classList.toggle("hidden", !arabicVoice);
+  const opts = $("options");
+  opts.innerHTML = "";
+  delete opts.dataset.count;
+  const go = document.createElement("button");
+  go.className = "btn study-go";
+  go.textContent = "Got it — quiz me →";
+  go.addEventListener("click", endStudy);
+  opts.appendChild(go);
+  go.focus();
+  speak(word.ar);
+}
+
+function endStudy() {
+  if (!state.current || !state.current.studying) return;
+  state.current.studying = false;
+  renderVocab();
+}
+
+const vocabAr2En = () => state.game !== "vocab-en2ar";   // Learn quizzes Arabic → English
+
 function renderVocab() {
   const { word } = state.current;
-  const ar2en = state.game === "vocab-ar2en";
+  const ar2en = vocabAr2En();
   state.answered = false;
   updateStats();
   $("feedback").classList.add("hidden");
   $("speakBtn").classList.add("hidden");
   $("formTag").textContent = ar2en ? "What does it mean?" : "Pick the Arabic";
+  $("speakBtn").classList.add("hidden");
   $("prompt").className = ar2en ? "prompt-word" : "prompt-en vocab";
   $("prompt").textContent = ar2en ? word.ar : word.en;
   $("promptSub").textContent = "";
@@ -823,7 +863,7 @@ function answerVocab(btn, chosen) {
   recordResult(correct, word);
   if (!correct) {
     btn.classList.add("wrong");
-    $("fbMsg").innerHTML = state.game === "vocab-ar2en"
+    $("fbMsg").innerHTML = vocabAr2En()
       ? `Not quite — it means <b>${escapeHtml(word.en)}</b>`
       : `Not quite — it's <span class="arf" style="font-size:1.5rem">${word.ar}</span>`;
   }
@@ -833,6 +873,18 @@ function answerVocab(btn, chosen) {
   $("feedback").classList.remove("hidden");
   $("nextBtn").focus();
   speak(word.ar);
+  // Learn: remember how far you got, so the next round starts with new words.
+  if (state.learnFrom !== null) {
+    settings.learnNext = (state.learnFrom + state.index + 1) % state.vocab.length;
+    saveSettings();
+    renderLearnInfo();
+  }
+}
+
+function renderLearnInfo() {
+  const show = state.game === "vocab-learn";
+  $("learnInfo").classList.toggle("hidden", !show);
+  if (show) $("learnNext").textContent = `Next new word: #${settings.learnNext % settings.vocabSize + 1} of ${settings.vocabSize}.`;
 }
 
 function renderVocabSize() {
@@ -1048,6 +1100,12 @@ $("vocabSize").addEventListener("click", e => {
   toggleSettings(false);
   startGame(state.game);             // new round with the bigger (or smaller) word set
 });
+$("learnRestartBtn").addEventListener("click", () => {
+  settings.learnNext = 0;
+  saveSettings();
+  toggleSettings(false);
+  startGame("vocab-learn");
+});
 $("settingsBtn").addEventListener("click", () => toggleSettings());
 $("allLettersBtn").addEventListener("click", () => setAllLetters("all"));
 $("basicLettersBtn").addEventListener("click", () => setAllLetters("basic"));
@@ -1061,7 +1119,7 @@ $("againBtn").addEventListener("click", () => startGame(state.game));
 $("retryMissedBtn").addEventListener("click", () => startGame(state.game, state.missed));
 $("menuBtn").addEventListener("click", goHome);
 $("homeBtn").addEventListener("click", goHome);
-$("speakBtn").addEventListener("click", () => speak(state.current.letter.ar));
+$("speakBtn").addEventListener("click", () => speak((state.current.letter || state.current.word).ar));
 
 // Word games
 $("checkSpellBtn").addEventListener("click", checkSpelling);
@@ -1088,6 +1146,8 @@ document.addEventListener("keydown", e => {
     undoBuilt();
   } else if (!state.answered && state.game === "read" && e.key === "Enter" && e.target.tagName !== "BUTTON") {
     checkReading();
+  } else if (state.current && state.current.studying && e.key === "Enter" && e.target.tagName !== "BUTTON") {
+    endStudy();
   } else if (state.answered && !$("feedback").classList.contains("hidden")
              && (e.key === "Enter" || e.key === " ") && e.target !== $("nextBtn")) {
     e.preventDefault();

@@ -176,6 +176,11 @@ button {
 #vocabSection .choices-head { margin-top: 0; }
 
 /* Vocabulary */
+.study-meaning { font-size: 1.3rem; margin: 2px 0 6px; color: var(--ink); }
+.study-meaning b { font-size: 1.5rem; }
+.options .study-go { grid-column: 1 / -1; padding: 14px; font-size: 1.1rem; }
+.learn-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.learn-info .hint { margin: 0; }
 .vocab-status { color: var(--muted); font-size: 1.1rem; margin: 28px 0; }
 .prompt-en.vocab { font-size: clamp(1.8rem, 8vw, 2.8rem); margin: 14px 0; }
 .options .option.vocab-en { font-size: 1.15rem; padding: 14px 8px; }

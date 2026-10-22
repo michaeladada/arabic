@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-vocab="7f2937a2">
+<html lang="en" data-vocab="ee80895f">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=fdf98774">
+<link rel="stylesheet" href="style.css?v=a40b0b75">
 </head>
 <body>
 
@@ -58,6 +58,11 @@
     </div>
     <h3 class="group-title">Vocabulary</h3>
     <div class="games">
+      <button class="game-card" data-game="vocab-learn">
+        <div class="demo"><span class="ar">كتاب</span> = <span class="en small">book</span></div>
+        <h3>Learn new words</h3>
+        <p>See each word with its meaning, then pick it from the options.</p>
+      </button>
       <button class="game-card" data-game="vocab-ar2en">
         <div class="demo"><span class="ar">كتاب</span> → <span class="en small">book</span></div>
         <h3>Arabic → English</h3>
@@ -121,6 +126,10 @@
           </div>
         </div>
         <p class="hint">Practise the most common words first. A bigger set adds less common words and restarts the round.</p>
+        <div class="learn-info hidden" id="learnInfo">
+          <span class="hint" id="learnNext"></span>
+          <button class="btn secondary small" id="learnRestartBtn">Start again from #1</button>
+        </div>
       </div>
 
       <div id="lettersSection">
@@ -210,6 +219,6 @@
   </section>
 </main>
 
-<script src="app.js?v=2974c101"></script>
+<script src="app.js?v=cca19a6a"></script>
 </body>
 </html>
