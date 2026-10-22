@@ -128,7 +128,7 @@ button {
 
 .options {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -150,6 +150,17 @@ button {
 .option.correct { background: #e7f9ef; border-color: var(--good); }
 .option.wrong { background: #ffecec; border-color: var(--bad); animation: shake .35s; }
 .option:disabled { cursor: default; }
+/* 6 or 8 choices: still two rows, just narrower and smaller */
+.options[data-count="6"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.options[data-count="8"] { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.options[data-count="6"] .option { font-size: 1.25rem; padding: 12px 6px; }
+.options[data-count="8"] .option { font-size: 1.05rem; padding: 10px 4px; }
+.options[data-count="6"] .option.ar { font-size: 2.8rem; padding: 0 6px; }
+.options[data-count="8"] .option.ar { font-size: 2.3rem; padding: 0 4px; }
+.options[data-count="8"] .option .key { top: 3px; left: 6px; font-size: .65rem; }
+.option { overflow-wrap: anywhere; }
+.choices-head { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.choices-head h3 { margin: 0; }
 @keyframes shake {
   0%,100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
@@ -284,6 +295,12 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 @media (max-width: 420px) {
   .option { font-size: 1.25rem; }
   .option.ar { font-size: 2.8rem; }
+  .options[data-count="6"] { gap: 6px; }
+  .options[data-count="8"] { gap: 5px; }
+  .options[data-count="6"] .option { font-size: 1rem; padding: 10px 3px; }
+  .options[data-count="8"] .option { font-size: .85rem; padding: 10px 2px; }
+  .options[data-count="6"] .option.ar { font-size: 2.3rem; padding: 0 3px; }
+  .options[data-count="8"] .option.ar { font-size: 1.9rem; padding: 0 2px; }
   .fb-actions .forms-row { gap: 8px; font-size: 1.5rem; }
   .tile { font-size: .9rem; padding: 6px 2px; }
   /* Tighter spacing everywhere on phones */

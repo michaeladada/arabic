@@ -315,6 +315,7 @@ const state = {
 // ---------- Settings (persisted) ----------
 const ALL_FORMS = ["isolated", "initial", "medial", "final"];
 const STORE_KEY = "arabic-alphabet-settings";
+const CHOICE_COUNTS = [4, 6, 8];
 const settings = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
@@ -326,9 +327,10 @@ const settings = (() => {
       forms: forms.length ? forms : [...ALL_FORMS],
       letters: new Set(letters.length ? letters : ALL_LETTERS.map(l => l.ar)),
       osk: saved.osk === true,
+      choices: CHOICE_COUNTS.includes(saved.choices) ? saved.choices : 4,
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4 };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -574,11 +576,13 @@ function buildOptions(correct, form) {
   // Mix look-alike letters (same shape group) with random ones to keep it challenging.
   // Only use letters that really have this shape (e.g. no ة at the start of a word).
   const fits = l => l !== correct && formsOf(l).includes(form);
+  const wrongCount = settings.choices - 1;
   let pool = state.pool.filter(fits);
-  if (pool.length < 3) pool = ALL_LETTERS.filter(fits);
+  if (pool.length < wrongCount) pool = ALL_LETTERS.filter(fits);
   const similar = shuffle(pool.filter(l => l.group === correct.group));
   const others = shuffle(pool.filter(l => l.group !== correct.group));
-  const distractors = [...similar.slice(0, 2), ...others].slice(0, 3);
+  // About half the wrong answers are look-alikes (2 of 3, 3 of 5, 4 of 7).
+  const distractors = [...similar.slice(0, settings.choices / 2), ...others].slice(0, wrongCount);
   return shuffle([correct, ...distractors]);
 }
 
@@ -611,6 +615,7 @@ function renderQuestion() {
   const sub = $("promptSub");
   const opts = $("options");
   opts.innerHTML = "";
+  opts.dataset.count = settings.choices;
 
   if (state.game === "ar2name") {
     prompt.className = "prompt-ar";
@@ -699,6 +704,11 @@ function toggleSettings(open = $("settings").classList.contains("hidden")) {
   }
 }
 
+function renderChoiceCount() {
+  document.querySelectorAll("#choiceCount [data-count]").forEach(b =>
+    b.setAttribute("aria-pressed", +b.dataset.count === settings.choices));
+}
+
 function renderFormChecks() {
   document.querySelectorAll("#formChecks input").forEach(i => { i.checked = settings.forms.includes(i.value); });
 }
@@ -771,6 +781,16 @@ function applyLetters() {
 // ---------- Events ----------
 renderFormChecks();
 $("formChecks").addEventListener("change", onFormsChange);
+$("choiceCount").addEventListener("click", e => {
+  const b = e.target.closest("[data-count]");
+  if (!b) return;
+  settings.choices = +b.dataset.count;
+  saveSettings();
+  renderChoiceCount();
+  // Redraw the current question with the new number of choices (answered ones change on Next).
+  if (!isWordGame() && state.current && !state.answered) renderQuestion();
+});
+renderChoiceCount();
 $("settingsBtn").addEventListener("click", () => toggleSettings());
 $("allLettersBtn").addEventListener("click", () => setAllLetters("all"));
 $("basicLettersBtn").addEventListener("click", () => setAllLetters("basic"));
@@ -803,7 +823,7 @@ $("checkReadBtn").addEventListener("click", checkReading);
 document.addEventListener("keydown", e => {
   if ($("game").classList.contains("hidden")) return;
   if ($("settings").contains(e.target)) return; // don't answer while using the settings panel
-  if (!state.answered && !isWordGame() && /^[1-4]$/.test(e.key)) {
+  if (!state.answered && !isWordGame() && /^[1-8]$/.test(e.key)) {
     const btn = document.querySelectorAll(".option")[+e.key - 1];
     if (btn) btn.click();
   } else if (!state.answered && state.game === "read" && e.key === "Backspace") {

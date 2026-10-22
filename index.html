@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=eaf704be">
+<link rel="stylesheet" href="style.css?v=754d48b0">
 </head>
 <body>
 
@@ -46,7 +46,7 @@
         <p>See an Arabic word, build it from letter names.</p>
       </button>
     </div>
-    <p class="hint center">Tip: keys 1–4 answer, Enter goes next. Choose letters and forms with ⚙ Settings inside the game.</p>
+    <p class="hint center">Tip: number keys answer, Enter goes next. Choose letters and forms with ⚙ Settings inside the game.</p>
   </section>
 
   <!-- ===== Game ===== -->
@@ -71,6 +71,14 @@
           <label><input type="checkbox" value="final" checked> End &nbsp;<b class="arf">ـب</b></label>
         </div>
         <p class="hint">Each letter is shown in a random form from the ones you select. Changes apply right away.</p>
+        <div class="choices-head">
+          <h3>Answer choices</h3>
+          <div class="seg" id="choiceCount" role="group" aria-label="Answer choices">
+            <button class="btn secondary small" data-count="4">4</button>
+            <button class="btn secondary small" data-count="6">6</button>
+            <button class="btn secondary small" data-count="8">8</button>
+          </div>
+        </div>
       </div>
 
       <div class="letters-head" id="lettersHead">
@@ -158,6 +166,6 @@
   </section>
 </main>
 
-<script src="app.js?v=bdaec09e"></script>
+<script src="app.js?v=bc0322df"></script>
 </body>
 </html>
