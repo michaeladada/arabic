@@ -326,10 +326,9 @@ const settings = (() => {
       forms: forms.length ? forms : [...ALL_FORMS],
       letters: new Set(letters.length ? letters : ALL_LETTERS.map(l => l.ar)),
       osk: saved.osk === true,
-      tileMode: saved.tileMode === "all" ? "all" : "easy",
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, tileMode: "easy" };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -399,6 +398,9 @@ function startGame(game, items = null) {
   $("spellArea").classList.toggle("hidden", game !== "spell");
   $("readArea").classList.toggle("hidden", game !== "read");
   $("formsSection").classList.toggle("hidden", isWordGame());
+  // In Read it, show the answer right under Check rather than below the tiles.
+  if (game === "read") $("readTools").after($("feedback"));
+  else $("game").appendChild($("feedback"));
   show("game");
   nextQuestion();
 }
@@ -521,19 +523,8 @@ function typeIntoSpell(ch) {
 
 function renderTiles() {
   const { word } = state.current;
-  let letters;
-  if (settings.tileMode === "all") {
-    letters = ALL_LETTERS;
-  } else {
-    // The word's letters plus a few look-alikes, in alphabet order.
-    const set = new Set(word.letters);
-    const lookAlikes = shuffle(ALL_LETTERS.filter(l => !set.has(l) && word.letters.some(w => w.group === l.group)));
-    const others = shuffle(LETTERS.filter(l => !set.has(l) && !lookAlikes.includes(l)));
-    [...lookAlikes, ...others].slice(0, Math.max(4, 8 - set.size)).forEach(l => set.add(l));
-    letters = ALL_LETTERS.filter(l => set.has(l));
-  }
-  document.querySelectorAll("#readArea .seg [data-mode]").forEach(b =>
-    b.setAttribute("aria-pressed", b.dataset.mode === settings.tileMode));
+  // Your selected letters, plus the word's own letters so it can always be built.
+  const letters = ALL_LETTERS.filter(l => settings.letters.has(l.ar) || word.letters.includes(l));
   $("tiles").innerHTML = "";
   letters.forEach(l => {
     const b = document.createElement("button");
@@ -560,9 +551,9 @@ function addBuilt(letter) {
   renderBuilt();
 }
 
-function undoBuilt(all = false) {
+function undoBuilt() {
   if (state.answered) return;
-  state.built = all ? [] : state.built.slice(0, -1);
+  state.built = state.built.slice(0, -1);
   renderBuilt();
 }
 
@@ -806,13 +797,7 @@ $("oskToggle").addEventListener("click", () => {
   renderOsk();
 });
 renderOsk();
-document.querySelectorAll("#readArea [data-mode]").forEach(b => b.addEventListener("click", () => {
-  settings.tileMode = b.dataset.mode;
-  saveSettings();
-  renderTiles();
-}));
 $("undoBtn").addEventListener("click", () => undoBuilt());
-$("clearBtn").addEventListener("click", () => undoBuilt(true));
 $("checkReadBtn").addEventListener("click", checkReading);
 
 document.addEventListener("keydown", e => {
