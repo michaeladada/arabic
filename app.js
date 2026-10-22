@@ -273,6 +273,11 @@ function sayHtml(say) {
 
 const WORD_GAMES = new Set(["spell", "read"]);
 const ORDER_GAMES = new Set(["order-ar", "order-name"]);
+const VOCAB_GAMES = new Set(["vocab-ar2en", "vocab-en2ar"]);
+const VOCAB_PART_SIZE = 500;
+const VOCAB_PART_COUNT = 2;           // vocab/words-1.js … words-N.js that exist so far
+const VOCAB_SIZES = Array.from({ length: VOCAB_PART_COUNT }, (_, i) => (i + 1) * VOCAB_PART_SIZE);
+const VOCAB_CHOICE_COUNTS = [4, 6];
 const WORDS_PER_ROUND = 10;
 
 // Letters that never join to the following letter.
@@ -311,6 +316,8 @@ const state = {
   current: null,
   answered: false,
   pool: LETTERS,     // letters used for wrong-answer choices this round
+  vocab: [],         // the loaded A1 vocabulary words
+  loadToken: 0,      // bumped on every start/go-home so a slow word load can't take over
 };
 
 // ---------- Settings (persisted) ----------
@@ -329,9 +336,12 @@ const settings = (() => {
       letters: new Set(letters.length ? letters : ALL_LETTERS.map(l => l.ar)),
       osk: saved.osk === true,
       choices: CHOICE_COUNTS.includes(saved.choices) ? saved.choices : 4,
+      vocabChoices: VOCAB_CHOICE_COUNTS.includes(saved.vocabChoices) ? saved.vocabChoices : 4,
+      vocabSize: VOCAB_SIZES.includes(saved.vocabSize) ? saved.vocabSize
+        : saved.vocabSize > VOCAB_SIZES.at(-1) ? VOCAB_SIZES.at(-1) : 500,
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4 };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: 500 };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -383,29 +393,28 @@ function speak(text) {
 // ---------- Game flow ----------
 const isWordGame = () => WORD_GAMES.has(state.game);
 const isOrderGame = () => ORDER_GAMES.has(state.game);
+const isVocabGame = () => VOCAB_GAMES.has(state.game);
 
-function startGame(game, items = null) {
+async function startGame(game, items = null) {
   state.game = game;
+  const token = ++state.loadToken;   // a newer start (or going home) cancels this one
   const chosen = selectedLetters();
   // Wrong answers come from your chosen letters, as long as there are enough of them.
   state.pool = chosen.length >= 4 ? chosen : ALL_LETTERS;
-  state.deck = items ? shuffle(items)
-    : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
-    : isOrderGame() ? [LETTERS]          // one pass through the whole alphabet
-    : shuffle(chosen);
-  state.index = 0;
-  state.score = 0;
-  state.missed = [];
-  $("total").textContent = state.deck.length;
   $("homeBtn").classList.remove("hidden");
   // Show only the answer area for this game.
   $("options").classList.toggle("hidden", isWordGame());
   $("spellArea").classList.toggle("hidden", game !== "spell");
   $("readArea").classList.toggle("hidden", game !== "read");
-  $("formsSection").classList.toggle("hidden", isWordGame());
-  $("choicesSection").classList.toggle("hidden", isWordGame());
   $("options").classList.toggle("order-grid", isOrderGame());
   $("options").classList.toggle("names", game === "order-name");
+  // Settings that apply to this game.
+  $("formsSection").classList.toggle("hidden", isWordGame() || isVocabGame());
+  $("choicesSection").classList.toggle("hidden", isWordGame());
+  $("lettersSection").classList.toggle("hidden", isVocabGame());
+  $("vocabSection").classList.toggle("hidden", !isVocabGame());
+  renderChoiceCount();
+  renderVocabSize();
   // The order games always use the whole alphabet, so they have no settings.
   $("settingsBtn").classList.toggle("hidden", isOrderGame());
   if (isOrderGame()) toggleSettings(false);
@@ -413,6 +422,28 @@ function startGame(game, items = null) {
   if (game === "read") $("readTools").after($("feedback"));
   else $("game").appendChild($("feedback"));
   show("game");
+
+  if (isVocabGame()) {
+    state.answered = true;             // nothing to answer while the words load
+    showVocabStatus("Loading words…");
+    try {
+      state.vocab = await loadVocab(settings.vocabSize);
+    } catch {
+      if (token === state.loadToken) showVocabStatus("Couldn't load the word list. Check your connection and try again.");
+      return;
+    }
+    if (token !== state.loadToken) return;
+  }
+
+  state.deck = items ? shuffle(items)
+    : isVocabGame() ? shuffle(state.vocab).slice(0, WORDS_PER_ROUND)
+    : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, WORDS_PER_ROUND)
+    : isOrderGame() ? [LETTERS]          // one pass through the whole alphabet
+    : shuffle(chosen);
+  state.index = 0;
+  state.score = 0;
+  state.missed = [];
+  $("total").textContent = state.deck.length;
   nextQuestion();
 }
 
@@ -601,6 +632,10 @@ function nextQuestion() {
     state.current = { word: state.deck[state.index] };
     return renderWord();
   }
+  if (isVocabGame()) {
+    state.current = { word: state.deck[state.index] };
+    return renderVocab();
+  }
   if (isOrderGame()) {
     state.current = { step: 0, wrongHere: 0 };
     return renderOrder();
@@ -689,6 +724,124 @@ function answer(btn, chosen) {
   speak(letter.ar);
 }
 
+// ---------- A1 vocabulary games ----------
+// The word list is split into files of 500 words (vocab/words-1.js … words-8.js),
+// most common first. Only the files needed for the chosen word set are loaded.
+const VOCAB_VERSION = document.documentElement.dataset.vocab || "";
+const vocabParts = {};               // part number -> Promise of its words
+window.VOCAB_PARTS = window.VOCAB_PARTS || {};
+
+function loadVocabPart(i) {
+  if (vocabParts[i]) return vocabParts[i];
+  return vocabParts[i] = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `vocab/words-${i}.js?v=${VOCAB_VERSION}`;
+    const fail = () => { delete vocabParts[i]; script.remove(); reject(new Error(`vocab part ${i}`)); };
+    script.onload = () => {
+      const rows = window.VOCAB_PARTS[i];
+      if (!rows) return fail();
+      resolve(rows.map(([ar, en, say]) => ({ ar, en, say })));
+    };
+    script.onerror = fail;
+    document.head.appendChild(script);
+  });
+}
+
+async function loadVocab(size) {
+  const parts = Array.from({ length: size / VOCAB_PART_SIZE }, (_, i) => loadVocabPart(i + 1));
+  return (await Promise.all(parts)).flat();
+}
+
+const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+function showVocabStatus(message) {
+  $("formTag").textContent = "A1 vocabulary";
+  $("prompt").className = "vocab-status";
+  $("prompt").textContent = message;
+  $("promptSub").textContent = "";
+  $("options").innerHTML = "";
+  $("feedback").classList.add("hidden");
+  $("speakBtn").classList.add("hidden");
+}
+
+// Wrong answers: other words with different spellings and meanings. Verbs ("to …")
+// are matched with verbs and other words with other words, so the answer isn't obvious.
+function vocabOptions(word) {
+  const isVerb = w => w.en.startsWith("to ");
+  const others = state.vocab.filter(w => w.ar !== word.ar && w.en !== word.en);
+  const ordered = [...shuffle(others.filter(w => isVerb(w) === isVerb(word))),
+                   ...shuffle(others.filter(w => isVerb(w) !== isVerb(word)))];
+  const usedAr = new Set([word.ar]), usedEn = new Set([word.en]);
+  const picked = [];
+  for (const w of ordered) {
+    if (picked.length === settings.vocabChoices - 1) break;
+    if (usedAr.has(w.ar) || usedEn.has(w.en)) continue;
+    usedAr.add(w.ar);
+    usedEn.add(w.en);
+    picked.push(w);
+  }
+  return shuffle([word, ...picked]);
+}
+
+function renderVocab() {
+  const { word } = state.current;
+  const ar2en = state.game === "vocab-ar2en";
+  state.answered = false;
+  updateStats();
+  $("feedback").classList.add("hidden");
+  $("speakBtn").classList.add("hidden");
+  $("formTag").textContent = ar2en ? "What does it mean?" : "Pick the Arabic";
+  $("prompt").className = ar2en ? "prompt-word" : "prompt-en vocab";
+  $("prompt").textContent = ar2en ? word.ar : word.en;
+  $("promptSub").textContent = "";
+
+  const opts = $("options");
+  opts.innerHTML = "";
+  opts.dataset.count = settings.vocabChoices;
+  vocabOptions(word).forEach((w, i) => {
+    const b = document.createElement("button");
+    b.className = "option " + (ar2en ? "vocab-en" : "ar vocab-ar");
+    b.dataset.key = w.ar;
+    b.innerHTML = `<span class="key">${i + 1}</span>`;
+    const label = document.createElement("span");
+    label.textContent = ar2en ? w.en : w.ar;
+    b.appendChild(label);
+    b.addEventListener("click", () => answerVocab(b, w));
+    opts.appendChild(b);
+  });
+}
+
+function answerVocab(btn, chosen) {
+  if (state.answered) return;
+  state.answered = true;
+  const { word } = state.current;
+  const correct = chosen === word;
+  document.querySelectorAll(".option").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.key === word.ar) b.classList.add("correct");
+  });
+  recordResult(correct, word);
+  if (!correct) {
+    btn.classList.add("wrong");
+    $("fbMsg").innerHTML = state.game === "vocab-ar2en"
+      ? `Not quite — it means <b>${escapeHtml(word.en)}</b>`
+      : `Not quite — it's <span class="arf" style="font-size:1.5rem">${word.ar}</span>`;
+  }
+  $("fbExample").innerHTML = `<span class="word">${word.ar}</span> ${sayHtml(word.say)} — ${escapeHtml(word.en)}`;
+  $("fbForms").className = "forms-row";
+  $("fbForms").innerHTML = "";
+  $("feedback").classList.remove("hidden");
+  $("nextBtn").focus();
+  speak(word.ar);
+}
+
+function renderVocabSize() {
+  document.querySelectorAll("#vocabSize [data-size]").forEach(b => {
+    b.classList.toggle("hidden", !VOCAB_SIZES.includes(+b.dataset.size)); // not available yet
+    b.setAttribute("aria-pressed", +b.dataset.size === settings.vocabSize);
+  });
+}
+
 // ---------- Alphabet order games ----------
 // All 28 letters, shuffled; tap them in alphabet order. One letter = one point if tapped
 // without a wrong tap first. Letters you stumbled on go to the review list.
@@ -765,15 +918,18 @@ function endGame() {
   $("finalScore").textContent = `${state.score} / ${total}`;
   $("missedWrap").classList.toggle("hidden", !state.missed.length);
   $("retryMissedBtn").classList.toggle("hidden", !state.missed.length || isOrderGame());
-  $("missedTitle").textContent = isWordGame() ? "Words to review:"
+  $("missedTitle").textContent = isWordGame() || isVocabGame() ? "Words to review:"
     : isOrderGame() ? "Letters you stumbled on:" : "Letters to review:";
-  $("missed").innerHTML = state.missed.map(item => isWordGame()
+  $("missed").innerHTML = state.missed.map(item => isVocabGame()
+    ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${escapeHtml(item.en)}</div>`
+    : isWordGame()
     ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${item.emoji} ${item.meaning}</div>`
     : `<div><div class="ar">${item.ar}</div>${item.name}</div>`).join("");
   show("summary");
 }
 
 function goHome() {
+  state.loadToken++;               // stop a word list that's still loading from opening the game
   $("homeBtn").classList.add("hidden");
   show("menu");
 }
@@ -788,9 +944,14 @@ function toggleSettings(open = $("settings").classList.contains("hidden")) {
   }
 }
 
+// Letter games offer 4, 6 or 8 choices; vocabulary games 4 or 6 (saved separately).
 function renderChoiceCount() {
-  document.querySelectorAll("#choiceCount [data-count]").forEach(b =>
-    b.setAttribute("aria-pressed", +b.dataset.count === settings.choices));
+  const vocab = isVocabGame();
+  const current = vocab ? settings.vocabChoices : settings.choices;
+  document.querySelectorAll("#choiceCount [data-count]").forEach(b => {
+    b.classList.toggle("hidden", vocab && !VOCAB_CHOICE_COUNTS.includes(+b.dataset.count));
+    b.setAttribute("aria-pressed", +b.dataset.count === current);
+  });
 }
 
 function renderFormChecks() {
@@ -868,13 +1029,25 @@ $("formChecks").addEventListener("change", onFormsChange);
 $("choiceCount").addEventListener("click", e => {
   const b = e.target.closest("[data-count]");
   if (!b) return;
-  settings.choices = +b.dataset.count;
+  if (isVocabGame()) settings.vocabChoices = +b.dataset.count;
+  else settings.choices = +b.dataset.count;
   saveSettings();
   renderChoiceCount();
   // Redraw the current question with the new number of choices (answered ones change on Next).
-  if (!isWordGame() && state.current && !state.answered) renderQuestion();
+  if (!state.current || state.answered) return;
+  if (isVocabGame()) renderVocab();
+  else if (!isWordGame() && !isOrderGame()) renderQuestion();
 });
 renderChoiceCount();
+$("vocabSize").addEventListener("click", e => {
+  const b = e.target.closest("[data-size]");
+  if (!b || +b.dataset.size === settings.vocabSize) return;
+  settings.vocabSize = +b.dataset.size;
+  saveSettings();
+  renderVocabSize();
+  toggleSettings(false);
+  startGame(state.game);             // new round with the bigger (or smaller) word set
+});
 $("settingsBtn").addEventListener("click", () => toggleSettings());
 $("allLettersBtn").addEventListener("click", () => setAllLetters("all"));
 $("basicLettersBtn").addEventListener("click", () => setAllLetters("basic"));
@@ -915,7 +1088,8 @@ document.addEventListener("keydown", e => {
     undoBuilt();
   } else if (!state.answered && state.game === "read" && e.key === "Enter" && e.target.tagName !== "BUTTON") {
     checkReading();
-  } else if (state.answered && (e.key === "Enter" || e.key === " ") && e.target !== $("nextBtn")) {
+  } else if (state.answered && !$("feedback").classList.contains("hidden")
+             && (e.key === "Enter" || e.key === " ") && e.target !== $("nextBtn")) {
     e.preventDefault();
     $("nextBtn").click();
   }

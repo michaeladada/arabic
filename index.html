@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-vocab="33dfdc60">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6fdb7a59">
+<link rel="stylesheet" href="style.css?v=6ab19c9b">
 </head>
 <body>
 
@@ -41,6 +41,19 @@
         <div class="demo"><span class="en small">alif · baa · taa</span></div>
         <h3>Alphabet order · Names</h3>
         <p>Tap all 28 letter names in alphabet order.</p>
+      </button>
+    </div>
+    <h3 class="group-title">A1 vocabulary</h3>
+    <div class="games">
+      <button class="game-card" data-game="vocab-ar2en">
+        <div class="demo"><span class="ar">كتاب</span> → <span class="en small">book</span></div>
+        <h3>A1 · Arabic → English</h3>
+        <p>See an Arabic word, pick its meaning.</p>
+      </button>
+      <button class="game-card" data-game="vocab-en2ar">
+        <div class="demo"><span class="en small">book</span> → <span class="ar">كتاب</span></div>
+        <h3>A1 · English → Arabic</h3>
+        <p>See an English word, pick the Arabic.</p>
       </button>
     </div>
     <h3 class="group-title">Words</h3>
@@ -93,6 +106,24 @@
         </div>
       </div>
 
+      <div id="vocabSection">
+        <div class="choices-head">
+          <h3>Word set</h3>
+          <div class="seg wrap" id="vocabSize" role="group" aria-label="Word set">
+            <button class="btn secondary small" data-size="500">500</button>
+            <button class="btn secondary small" data-size="1000">1000</button>
+            <button class="btn secondary small" data-size="1500">1500</button>
+            <button class="btn secondary small" data-size="2000">2000</button>
+            <button class="btn secondary small" data-size="2500">2500</button>
+            <button class="btn secondary small" data-size="3000">3000</button>
+            <button class="btn secondary small" data-size="3500">3500</button>
+            <button class="btn secondary small" data-size="4000">4000</button>
+          </div>
+        </div>
+        <p class="hint">Practise the most common words first. A bigger set adds less common words and restarts the round.</p>
+      </div>
+
+      <div id="lettersSection">
       <div class="letters-head" id="lettersHead">
         <h3>Letters <span class="muted" id="letterCount"></span></h3>
         <div>
@@ -105,6 +136,7 @@
       <div class="letters-foot">
         <span class="hint" id="lettersHint"></span>
         <button class="btn" id="applyLettersBtn" disabled>Restart with these letters</button>
+      </div>
       </div>
     </div>
 
@@ -178,6 +210,6 @@
   </section>
 </main>
 
-<script src="app.js?v=5433abec"></script>
+<script src="app.js?v=93c48649"></script>
 </body>
 </html>
