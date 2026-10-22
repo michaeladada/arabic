@@ -227,21 +227,21 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .group-title { margin: 22px 0 10px; color: var(--muted); font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .game-card .demo .en.small { font-size: 1.05rem; }
 .prompt-word { font-family: "Noto Naskh Arabic", serif; font-size: clamp(3.4rem, 14vw, 6rem); line-height: 1.4; margin: 0; }
-.prompt-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px 0 10px; }
+.prompt-names { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 12px 0 6px; }
 .name-chip {
-  background: #f1ecff; border-radius: 12px; padding: 8px 14px;
-  font-size: clamp(1.2rem, 5vw, 1.7rem); font-weight: 800; position: relative;
+  background: #f1ecff; border-radius: 10px; padding: 4px 10px;
+  font-size: clamp(1rem, 4.2vw, 1.35rem); font-weight: 800; position: relative;
 }
 .name-chip sup { color: var(--muted); font-size: .65rem; margin-right: 4px; }
 .say { font-style: italic; color: var(--accent); font-weight: 700; cursor: help; }
-.prompt-meaning { font-size: 1.1rem; color: var(--muted); margin-top: 6px; }
+.prompt-meaning { font-size: 1rem; color: var(--muted); margin-top: 4px; }
 
 .word-area { margin-top: 16px; }
 .spell-row { display: flex; gap: 10px; }
 .word-input {
   flex: 1; min-width: 0;
-  font-family: "Noto Naskh Arabic", serif; font-size: 2.4rem; line-height: 1.5;
-  padding: 4px 16px; border: 3px solid #e6e1ee; border-radius: 14px; background: var(--card); color: var(--ink);
+  font-family: "Noto Naskh Arabic", serif; font-size: 2rem; line-height: 1.4;
+  padding: 2px 12px; border: 3px solid #e6e1ee; border-radius: 14px; background: var(--card); color: var(--ink);
 }
 .word-input:focus { outline: none; border-color: var(--accent); }
 .word-input.correct { border-color: var(--good); background: #e7f9ef; }
@@ -254,7 +254,7 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .osk { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; margin-top: 10px; direction: rtl; }
 .osk button {
   background: var(--card); border: 2px solid #e6e1ee; padding: 2px 0;
-  font-family: "Noto Naskh Arabic", serif; font-size: 1.7rem; line-height: 1.5;
+  font-family: "Noto Naskh Arabic", serif; font-size: 1.5rem; line-height: 1.4;
 }
 .osk button:hover { border-color: var(--accent); }
 .osk button.wide { grid-column: span 2; font-family: "Nunito", sans-serif; font-size: 1rem; font-weight: 700; }
@@ -297,7 +297,6 @@ u { text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .prompt-card { padding: 10px 12px; }
   .prompt-ar { font-size: clamp(5rem, 22vw, 7rem); line-height: 1.35; }
   .prompt-en { margin: 12px 0; }
-  .prompt-names { margin: 12px 0 6px; }
   .options { gap: 8px; margin-top: 10px; }
   .option { padding: 10px 8px; }
   .word-area { margin-top: 10px; }
