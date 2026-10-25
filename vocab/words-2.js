@@ -1,6 +1,13 @@
 // Vocabulary, words 501–1000 (most common first). Each entry: [Arabic, English, pronunciation].
 // Loaded on demand by app.js.
 (window.VOCAB_PARTS = window.VOCAB_PARTS || {})[2] = [
+  ["كره", "to hate", "kariha"],
+  ["فضل", "to prefer", "faDDala"],
+  ["شكر", "to thank", "shakara"],
+  ["صلى", "to pray", "Sallaa"],
+  ["حدث", "to happen", "Hadatha"],
+  ["غنى", "to sing", "ghannaa"],
+  ["رقص", "to dance", "raqaSa"],
   ["يناير", "January", "yanaayir"],
   ["فبراير", "February", "fibraayir"],
   ["مارس", "March", "maaris"],
@@ -20,7 +27,6 @@
   ["فقط", "only", "faqaT"],
   ["معا", "together", "maʿan"],
   ["ربما", "maybe", "rubbamaa"],
-  ["حتى", "until", "Hattaa"],
   ["منذ", "since", "mundhu"],
   ["خلال", "during", "khilaal"],
   ["حول", "around", "Hawla"],
@@ -31,9 +37,6 @@
   ["بدون", "without", "biduun"],
   ["مثل", "like", "mithl"],
   ["لذلك", "therefore", "lidhaalika"],
-  ["ثم", "then", "thumma"],
-  ["لن", "will not", "lan"],
-  ["لم", "did not", "lam"],
   ["سوف", "will", "sawfa"],
   ["تقريبا", "almost", "taqriiban"],
   ["حقا", "really", "Haqqan"],
@@ -45,7 +48,6 @@
   ["مرة", "time (occurrence)", "marra"],
   ["أخيرا", "finally", "'akhiiran"],
   ["أولا", "firstly", "'awwalan"],
-  ["ليس", "is not", "laysa"],
   ["نحو", "towards", "naHwa"],
   ["أسرة", "family (household)", "'usra"],
   ["والد", "father (formal)", "waalid"],
@@ -499,6 +501,4 @@
   ["مسلم", "Muslim", "muslim"],
   ["مسيحي", "Christian", "masiiHii"],
   ["صلاة", "prayer", "Salaa"],
-  ["صوم", "fasting", "Sawm"],
-  ["رمضان", "Ramadan", "ramaDaan"],
 ];

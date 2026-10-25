@@ -1,6 +1,8 @@
 // Vocabulary, words 1501–2000 (most common first). Each entry: [Arabic, English, pronunciation].
 // Loaded on demand by app.js.
 (window.VOCAB_PARTS = window.VOCAB_PARTS || {})[4] = [
+  ["بوابة", "gate", "bawwaaba"],
+  ["مدفأة", "heater", "midfa'a"],
   ["مكواة", "iron (appliance)", "mikwaa"],
   ["وعاء", "bowl", "wiʿaa'"],
   ["طبق", "dish", "Tabaq"],
@@ -442,8 +444,6 @@
   ["حنان", "tenderness", "Hanaan"],
   ["هؤلاء", "these", "haa'ulaa'i"],
   ["أولئك", "those", "'ulaa'ika"],
-  ["هن", "they (feminine)", "hunna"],
-  ["الذي", "who (relative)", "alladhii"],
   ["أمر", "matter", "'amr"],
   ["موضوع", "topic", "mawDuuʿ"],
   ["مسألة", "problem (question)", "mas'ala"],

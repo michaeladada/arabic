@@ -1,6 +1,8 @@
 // Vocabulary, words 1001–1500 (most common first). Each entry: [Arabic, English, pronunciation].
 // Loaded on demand by app.js.
 (window.VOCAB_PARTS = window.VOCAB_PARTS || {})[3] = [
+  ["صوم", "fasting", "Sawm"],
+  ["رمضان", "Ramadan", "ramaDaan"],
   ["بسرعة", "quickly", "bisurʿa"],
   ["ببطء", "slowly", "bibuT'"],
   ["هكذا", "like this", "haakadhaa"],
@@ -499,6 +501,4 @@
   ["مخزن", "storeroom", "makhzan"],
   ["مرآب", "garage", "mir'aab"],
   ["سياج", "fence", "siyaaj"],
-  ["بوابة", "gate", "bawwaaba"],
-  ["مدفأة", "heater", "midfa'a"],
 ];

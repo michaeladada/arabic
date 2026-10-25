@@ -276,7 +276,8 @@ const ORDER_GAMES = new Set(["order-ar", "order-name"]);
 const VOCAB_GAMES = new Set(["vocab-learn", "vocab-ar2en", "vocab-en2ar"]);
 const VOCAB_PART_SIZE = 500;
 const VOCAB_PART_COUNT = 8;           // vocab/words-1.js … words-N.js that exist so far
-const VOCAB_SIZES = Array.from({ length: VOCAB_PART_COUNT }, (_, i) => (i + 1) * VOCAB_PART_SIZE);
+const VOCAB_SIZE_STEP = 50;           // the word-set slider moves 50 words at a time
+const VOCAB_MAX = VOCAB_PART_COUNT * VOCAB_PART_SIZE;
 const VOCAB_CHOICE_COUNTS = [4, 6];
 const ROUND_SIZES = { min: 10, max: 100, step: 10 };   // words per round in word & vocabulary games
 
@@ -340,11 +341,11 @@ const settings = (() => {
       roundSize: Number.isInteger(saved.roundSize) && saved.roundSize >= ROUND_SIZES.min
         && saved.roundSize <= ROUND_SIZES.max && saved.roundSize % ROUND_SIZES.step === 0 ? saved.roundSize : 10,
       learnNext: Number.isInteger(saved.learnNext) && saved.learnNext >= 0 ? saved.learnNext : 0,
-      vocabSize: VOCAB_SIZES.includes(saved.vocabSize) ? saved.vocabSize
-        : saved.vocabSize > VOCAB_SIZES.at(-1) ? VOCAB_SIZES.at(-1) : 500,
+      vocabSize: Number.isInteger(saved.vocabSize) && saved.vocabSize % VOCAB_SIZE_STEP === 0
+        ? Math.min(Math.max(saved.vocabSize, VOCAB_SIZE_STEP), VOCAB_MAX) : VOCAB_SIZE_STEP,
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: 500, learnNext: 0, roundSize: 10 };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabSize: VOCAB_SIZE_STEP, learnNext: 0, roundSize: 10 };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -413,7 +414,8 @@ async function startGame(game, items = null) {
   $("options").classList.toggle("names", game === "order-name");
   // Settings that apply to this game.
   $("formsSection").classList.toggle("hidden", isWordGame() || isVocabGame());
-  $("choicesSection").classList.toggle("hidden", isWordGame());
+  $("choicesSection").classList.toggle("hidden", isWordGame() || game === "vocab-learn");
+  $("scorePill").classList.toggle("hidden", game === "vocab-learn");   // flashcards aren't scored
   $("lettersSection").classList.toggle("hidden", isVocabGame());
   $("vocabSection").classList.toggle("hidden", !isVocabGame());
   $("roundSection").classList.toggle("hidden", !isWordGame() && !isVocabGame());
@@ -430,6 +432,7 @@ async function startGame(game, items = null) {
   show("game");
 
   state.deck = [];                     // the old round is over (matters while words load)
+  state.current = null;
   if (isVocabGame()) {
     state.answered = true;             // nothing to answer while the words load
     showVocabStatus("Loading words…");
@@ -787,9 +790,10 @@ function loadVocabPart(i) {
   });
 }
 
+// The `size` most common words.
 async function loadVocab(size) {
-  const parts = Array.from({ length: size / VOCAB_PART_SIZE }, (_, i) => loadVocabPart(i + 1));
-  return (await Promise.all(parts)).flat();
+  const parts = Array.from({ length: Math.ceil(size / VOCAB_PART_SIZE) }, (_, i) => loadVocabPart(i + 1));
+  return (await Promise.all(parts)).flat().slice(0, size);
 }
 
 const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -823,38 +827,50 @@ function vocabOptions(word) {
   return shuffle([word, ...picked]);
 }
 
-// Learn: first a card with the word, its pronunciation and meaning; then the quiz.
+// Learn: flashcards, no quiz. Each card shows the word, how it sounds, what it means
+// and the letters it's written with.
 function renderStudy() {
   const { word } = state.current;
   state.current.studying = true;
-  state.answered = true;                 // no answering until you've seen the word
+  state.answered = true;                 // nothing to answer here
   updateStats();
   $("feedback").classList.add("hidden");
   const pos = state.learnFrom === null ? null : (state.learnFrom + state.index) % state.vocab.length;
-  $("formTag").textContent = pos === null ? "Review" : `New word · #${pos + 1}`;
+  $("formTag").textContent = pos === null ? "Review" : `Word #${pos + 1} of ${state.vocab.length}`;
   $("prompt").className = "prompt-word";
   $("prompt").textContent = word.ar;
-  $("promptSub").innerHTML = `<div class="study-meaning">${sayHtml(word.say)} <b>${escapeHtml(word.en)}</b></div>`;
+  const letters = [...word.ar].map(c => LETTER_BY_AR[c]
+    ? `<span>${c}<small>${LETTER_BY_AR[c].name}</small></span>`
+    : c.trim() ? `<span>${c}</span>` : `<span class="gap"></span>`).join("");
+  $("promptSub").innerHTML = `<div class="study-meaning">${sayHtml(word.say)} <b>${escapeHtml(word.en)}</b></div>`
+    + `<div class="forms-row word study-letters">${letters}</div>`;
   $("speakBtn").classList.toggle("hidden", !arabicVoice);
   const opts = $("options");
   opts.innerHTML = "";
   delete opts.dataset.count;
   const go = document.createElement("button");
   go.className = "btn study-go";
-  go.textContent = "Got it — quiz me →";
-  go.addEventListener("click", endStudy);
+  go.textContent = state.index + 1 < state.deck.length ? "Next word →" : "Finish ✓";
+  go.addEventListener("click", nextCard);
   opts.appendChild(go);
   go.focus();
   speak(word.ar);
 }
 
-function endStudy() {
-  if (!state.current || !state.current.studying) return;
+function nextCard() {
+  if (!state.current || !state.current.studying || !state.deck.length) return;
   state.current.studying = false;
-  renderVocab();
+  // Remember how far you got, so the next round starts with the following words.
+  if (state.learnFrom !== null) {
+    settings.learnNext = (state.learnFrom + state.index + 1) % state.vocab.length;
+    saveSettings();
+    renderLearnInfo();
+  }
+  state.index++;
+  nextQuestion();
 }
 
-const vocabAr2En = () => state.game !== "vocab-en2ar";   // Learn quizzes Arabic → English
+const vocabAr2En = () => state.game !== "vocab-en2ar";
 
 function renderVocab() {
   const { word } = state.current;
@@ -907,12 +923,6 @@ function answerVocab(btn, chosen) {
   $("feedback").classList.remove("hidden");
   $("nextBtn").focus();
   speak(word.ar);
-  // Learn: remember how far you got, so the next round starts with new words.
-  if (state.learnFrom !== null) {
-    settings.learnNext = (state.learnFrom + state.index + 1) % state.vocab.length;
-    saveSettings();
-    renderLearnInfo();
-  }
 }
 
 function renderLearnInfo() {
@@ -922,10 +932,12 @@ function renderLearnInfo() {
 }
 
 function renderVocabSize() {
-  document.querySelectorAll("#vocabSize [data-size]").forEach(b => {
-    b.classList.toggle("hidden", !VOCAB_SIZES.includes(+b.dataset.size)); // not available yet
-    b.setAttribute("aria-pressed", +b.dataset.size === settings.vocabSize);
-  });
+  const slider = $("vocabSize");
+  slider.min = VOCAB_SIZE_STEP;
+  slider.step = VOCAB_SIZE_STEP;
+  slider.max = VOCAB_MAX;
+  slider.value = settings.vocabSize;
+  $("vocabSizeLabel").textContent = settings.vocabSize;
 }
 
 // ---------- Alphabet order games ----------
@@ -1001,7 +1013,9 @@ function tapOrder(btn, letter) {
 function endGame() {
   $("bar").style.width = "100%";
   const total = isOrderGame() ? LETTERS.length : state.deck.length;
-  $("finalScore").textContent = `${state.score} / ${total}`;
+  const learn = state.game === "vocab-learn";
+  $("finalScore").textContent = learn ? `${total} words` : `${state.score} / ${total}`;
+  $("againBtn").textContent = learn ? "Next words →" : "Play again";
   $("missedWrap").classList.toggle("hidden", !state.missed.length);
   $("retryMissedBtn").classList.toggle("hidden", !state.missed.length || isOrderGame());
   $("missedTitle").textContent = isWordGame() || isVocabGame() ? "Words to review:"
@@ -1125,13 +1139,13 @@ $("choiceCount").addEventListener("click", e => {
   else if (!isWordGame() && !isOrderGame()) renderQuestion();
 });
 renderChoiceCount();
-$("vocabSize").addEventListener("click", e => {
-  const b = e.target.closest("[data-size]");
-  if (!b || +b.dataset.size === settings.vocabSize) return;
-  settings.vocabSize = +b.dataset.size;
+$("vocabSize").addEventListener("input", e => { $("vocabSizeLabel").textContent = e.target.value; });
+$("vocabSize").addEventListener("change", e => {
+  const size = +e.target.value;
+  if (size === settings.vocabSize) return;
+  settings.vocabSize = size;
   saveSettings();
   renderVocabSize();
-  toggleSettings(false);
   startGame(state.game);             // new round with the bigger (or smaller) word set
 });
 $("learnRestartBtn").addEventListener("click", () => {
@@ -1183,7 +1197,7 @@ document.addEventListener("keydown", e => {
   } else if (!state.answered && state.game === "read" && e.key === "Enter" && e.target.tagName !== "BUTTON") {
     checkReading();
   } else if (state.current && state.current.studying && e.key === "Enter" && e.target.tagName !== "BUTTON") {
-    endStudy();
+    nextCard();
   } else if (state.answered && !$("feedback").classList.contains("hidden")
              && (e.key === "Enter" || e.key === " ") && e.target !== $("nextBtn")) {
     e.preventDefault();

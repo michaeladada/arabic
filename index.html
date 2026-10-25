@@ -61,7 +61,7 @@
       <button class="game-card" data-game="vocab-learn">
         <div class="demo"><span class="ar">كتاب</span> = <span class="en small">book</span></div>
         <h3>Learn new words</h3>
-        <p>See each word with its meaning, then pick it from the options.</p>
+        <p>Flashcards: each word with its meaning, sound and letters.</p>
       </button>
       <button class="game-card" data-game="vocab-ar2en">
         <div class="demo"><span class="ar">كتاب</span> → <span class="en small">book</span></div>
@@ -81,7 +81,7 @@
   <section id="game" class="hidden">
     <div class="topbar">
       <div class="stats">
-        <span class="pill">✅ <span id="score">0</span></span>
+        <span class="pill" id="scorePill">✅ <span id="score">0</span></span>
         <span class="pill"><span id="count">1</span> / <span id="total">28</span></span>
       </div>
       <div class="stats">
@@ -120,19 +120,10 @@
 
       <div id="vocabSection">
         <div class="choices-head">
-          <h3>Word set</h3>
-          <div class="seg wrap" id="vocabSize" role="group" aria-label="Word set">
-            <button class="btn secondary small" data-size="500">500</button>
-            <button class="btn secondary small" data-size="1000">1000</button>
-            <button class="btn secondary small" data-size="1500">1500</button>
-            <button class="btn secondary small" data-size="2000">2000</button>
-            <button class="btn secondary small" data-size="2500">2500</button>
-            <button class="btn secondary small" data-size="3000">3000</button>
-            <button class="btn secondary small" data-size="3500">3500</button>
-            <button class="btn secondary small" data-size="4000">4000</button>
-          </div>
+          <h3>Word set: <span id="vocabSizeLabel">50</span> words</h3>
+          <input type="range" id="vocabSize" min="50" max="4000" step="50" value="50" aria-label="Word set">
         </div>
-        <p class="hint">Practise the most common words first. A bigger set adds less common words and restarts the round.</p>
+        <p class="hint">The most common words come first. All three vocabulary games use the same words, so you can learn them and then practise them. Moving the slider adds less common words and restarts the round.</p>
         <div class="learn-info hidden" id="learnInfo">
           <span class="hint" id="learnNext"></span>
           <button class="btn secondary small" id="learnRestartBtn">Start again from #1</button>

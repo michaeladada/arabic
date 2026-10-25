@@ -175,12 +175,14 @@ button {
 .seg.wrap { flex-wrap: wrap; }
 #roundSection { margin-bottom: 14px; }
 #roundSection .choices-head { margin-top: 0; }
-#roundSize { flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--accent); }
+#roundSize, #vocabSize {flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--accent); }
 #vocabSection .choices-head { margin-top: 0; }
 
 /* Vocabulary */
 .study-meaning { font-size: 1.3rem; margin: 2px 0 6px; color: var(--ink); }
 .study-meaning b { font-size: 1.5rem; }
+.study-letters { margin: 10px 0 4px; }
+.study-letters .gap { width: 14px; }
 .options .study-go { grid-column: 1 / -1; padding: 14px; font-size: 1.1rem; }
 .learn-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .learn-info .hint { margin: 0; }
