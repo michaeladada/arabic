@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2a6f33e0">
+<link rel="stylesheet" href="style.css?v=86395ffa">
 </head>
 <body>
 
@@ -85,6 +85,7 @@
         <span class="pill"><span id="count">1</span> / <span id="total">28</span></span>
       </div>
       <div class="stats">
+        <button class="btn secondary hidden" id="tableBtn" aria-pressed="false">📋 Word list</button>
         <button class="btn secondary" id="settingsBtn" aria-expanded="false" aria-controls="settings">⚙ Settings</button>
       </div>
     </div>
@@ -120,10 +121,18 @@
 
       <div id="vocabSection">
         <div class="choices-head">
-          <h3>Word set: <span id="vocabSizeLabel">50</span> words</h3>
-          <input type="range" id="vocabSize" min="50" max="4000" step="50" value="50" aria-label="Word set">
+          <h3>Words #<span id="vocabRangeLabel">1–50</span> <span class="muted" id="vocabCountLabel">(50 words)</span></h3>
+          <div class="seg">
+            <button class="btn secondary small" id="vocabPrevBtn">◀ Previous</button>
+            <button class="btn secondary small" id="vocabNextBtn">Next ▶</button>
+          </div>
         </div>
-        <p class="hint">The most common words come first. All three vocabulary games use the same words, so you can learn them and then practise them. Moving the slider adds less common words and restarts the round.</p>
+        <div class="dual-range">
+          <div class="track"><div class="fill" id="vocabFill"></div></div>
+          <input type="range" id="vocabFrom" min="0" max="4000" step="50" value="0" aria-label="First word">
+          <input type="range" id="vocabTo" min="0" max="4000" step="50" value="50" aria-label="Last word">
+        </div>
+        <p class="hint">Words are numbered from most to least common. All three vocabulary games use the words in this range, so you can learn them and then practise them. Drag either end, or use Previous / Next to move to the neighbouring words. Changing the range restarts the round.</p>
         <div class="learn-info hidden" id="learnInfo">
           <span class="hint" id="learnNext"></span>
           <button class="btn secondary small" id="learnRestartBtn">Start again from #1</button>
@@ -145,6 +154,14 @@
         <button class="btn" id="applyLettersBtn" disabled>Restart with these letters</button>
       </div>
       </div>
+    </div>
+
+    <!-- Learn: every word in the chosen range at a glance (tap a row to hear it) -->
+    <div class="word-table-wrap" id="wordTable">
+      <table class="word-table">
+        <thead><tr><th>#</th><th>Arabic</th><th>Sounds like</th><th>Meaning</th></tr></thead>
+        <tbody id="wordTableBody"></tbody>
+      </table>
     </div>
 
     <div class="progress"><div id="bar"></div></div>
@@ -217,6 +234,6 @@
   </section>
 </main>
 
-<script src="app.js?v=1f283c4b"></script>
+<script src="app.js?v=38c9de93"></script>
 </body>
 </html>

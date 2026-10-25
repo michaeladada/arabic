@@ -9,8 +9,8 @@ Open `index.html` in a browser to play.
 - `style.css` – styles
 - `app.js` – letters, words and game logic
 - `vocab/words-1.js`, `words-2.js`, … – Vocabulary, 500 words per file, most common first.
-  The word-set slider picks the N most common words (in steps of 50), shared by all
-  vocabulary games. `app.js` loads only the files needed for that set, and only when a
+  The two-handled word-range slider picks words #A–#B (in steps of 50), shared by all
+  vocabulary games; Previous / Next move the range along by its own size. `app.js` loads only the files needed for that set, and only when a
   vocabulary game starts. When adding a file, raise `VOCAB_PART_COUNT` in `app.js`.
 
 ## Cache busting

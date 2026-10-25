@@ -175,12 +175,56 @@ button {
 .seg.wrap { flex-wrap: wrap; }
 #roundSection { margin-bottom: 14px; }
 #roundSection .choices-head { margin-top: 0; }
-#roundSize, #vocabSize {flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--accent); }
+#roundSize {flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--accent); }
 #vocabSection .choices-head { margin-top: 0; }
 
 /* Vocabulary */
 .study-meaning { font-size: 1.3rem; margin: 2px 0 6px; color: var(--ink); }
 .study-meaning b { font-size: 1.5rem; }
+/* Two-handled slider: two range inputs stacked on one track; only the thumbs take clicks. */
+.dual-range { position: relative; height: 34px; margin: 8px 0 0; }
+.dual-range .track {
+  position: absolute; left: 11px; right: 11px; top: 50%; height: 6px; transform: translateY(-50%);
+  background: #e6e1ee; border-radius: 3px;
+}
+.dual-range .fill { position: absolute; top: 0; bottom: 0; background: var(--accent); border-radius: 3px; }
+.dual-range input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  background: none; pointer-events: none; -webkit-appearance: none; appearance: none;
+}
+.dual-range input::-webkit-slider-runnable-track { height: 6px; background: transparent; }
+.dual-range input::-moz-range-track { height: 6px; background: transparent; }
+.dual-range input::-webkit-slider-thumb {
+  -webkit-appearance: none; pointer-events: auto; cursor: grab; margin-top: -8px;
+  width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+}
+.dual-range input::-moz-range-thumb {
+  pointer-events: auto; cursor: grab; box-sizing: border-box;
+  width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--accent);
+}
+.dual-range input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(124, 77, 255, .3); }
+.dual-range input:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px rgba(124, 77, 255, .3); }
+.dual-range input.on-top { z-index: 2; }
+
+/* Learn: word list instead of flashcards */
+#game:not(.table-view) #wordTable { display: none; }
+#game.table-view > .progress, #game.table-view > .prompt-card, #game.table-view > .options,
+#game.table-view > .feedback { display: none; }
+.word-table-wrap {
+  margin-top: 14px; background: var(--card); border: 3px solid #eee; border-radius: var(--radius);
+  max-height: 70vh; overflow: auto;
+}
+.word-table { width: 100%; border-collapse: collapse; }
+.word-table th {
+  position: sticky; top: 0; background: var(--card); text-align: left; padding: 8px 12px;
+  font-size: .8rem; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid #eee;
+}
+.word-table td { padding: 6px 12px; border-top: 1px solid #f0edf4; vertical-align: middle; }
+.word-table tbody tr { cursor: pointer; }
+.word-table tbody tr:hover { background: #f6f3fb; }
+.word-table td.n { color: var(--muted); font-size: .85rem; width: 1%; }
+.word-table td.ar { font-family: "Noto Naskh Arabic", serif; font-size: 1.6rem; line-height: 1.5; white-space: nowrap; }
+
 .study-letters { margin: 10px 0 4px; }
 .study-letters .gap { width: 14px; }
 .options .study-go { grid-column: 1 / -1; padding: 14px; font-size: 1.1rem; }
