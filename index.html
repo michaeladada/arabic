@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-vocab="df0d52cb">
+<html lang="en" data-vocab="b37ffb39">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=86395ffa">
+<link rel="stylesheet" href="style.css?v=8448ae81">
 </head>
 <body>
 
@@ -133,6 +133,9 @@
           <input type="range" id="vocabTo" min="0" max="4000" step="50" value="50" aria-label="Last word">
         </div>
         <p class="hint">Words are numbered from most to least common. All three vocabulary games use the words in this range, so you can learn them and then practise them. Drag either end, or use Previous / Next to move to the neighbouring words. Changing the range restarts the round.</p>
+        <div class="forms harakat-toggle">
+          <label><input type="checkbox" id="harakatToggle" checked> Show vowel marks (harakat) &nbsp;<b class="arf">كَتَبَ</b></label>
+        </div>
         <div class="learn-info hidden" id="learnInfo">
           <span class="hint" id="learnNext"></span>
           <button class="btn secondary small" id="learnRestartBtn">Start again from #1</button>
@@ -158,6 +161,7 @@
 
     <!-- Learn: every word in the chosen range at a glance (tap a row to hear it) -->
     <div class="word-table-wrap" id="wordTable">
+      <div id="tableLegend"></div>
       <table class="word-table">
         <thead><tr><th>#</th><th>Arabic</th><th>Sounds like</th><th>Meaning</th></tr></thead>
         <tbody id="wordTableBody"></tbody>
@@ -234,6 +238,6 @@
   </section>
 </main>
 
-<script src="app.js?v=38c9de93"></script>
+<script src="app.js?v=df044c94"></script>
 </body>
 </html>

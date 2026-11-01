@@ -353,9 +353,10 @@ const settings = (() => {
       learnNext: Number.isInteger(saved.learnNext) && saved.learnNext >= 0 ? saved.learnNext : 0,
       ...vocabRange(saved),
       learnTable: saved.learnTable === true,
+      harakat: saved.harakat !== false,
     };
   } catch {
-    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabFrom: 0, vocabTo: VOCAB_SIZE_STEP, learnNext: 0, roundSize: 10, learnTable: false };
+    return { forms: [...ALL_FORMS], letters: new Set(ALL_LETTERS.map(l => l.ar)), osk: false, choices: 4, vocabChoices: 4, vocabFrom: 0, vocabTo: VOCAB_SIZE_STEP, learnNext: 0, roundSize: 10, learnTable: false, harakat: true };
   }
 })();
 // Letters picked in the grid but not yet applied to the running round.
@@ -802,7 +803,9 @@ function loadVocabPart(i) {
       const rows = window.VOCAB_PARTS[i];
       if (!rows) return fail();
       // n: the word's number in the whole list (1 = most common)
-      resolve(rows.map(([ar, en, say], j) => ({ ar, en, say, n: (i - 1) * VOCAB_PART_SIZE + j + 1 })));
+      // ar: plain spelling (used to tell words apart); voc: with vowel marks (harakat)
+      resolve(rows.map(([voc, en, say], j) =>
+        ({ ar: voc.replace(HARAKAT, ""), voc, en, say, n: (i - 1) * VOCAB_PART_SIZE + j + 1 })));
     };
     script.onerror = fail;
     document.head.appendChild(script);
@@ -816,6 +819,46 @@ async function loadVocab(from, to) {
   const offset = first * VOCAB_PART_SIZE;
   return (await Promise.all(parts)).flat().slice(from - offset, to - offset);
 }
+
+// ---------- Vowel marks (harakat) ----------
+const HARAKAT = /[ً-ْٰ]/g;
+const FATHA = "َ", DAMMA = "ُ", KASRA = "ِ", SUKUN = "ْ", SHADDA = "ّ";
+const FATHATAN = "ً", DAMMATAN = "ٌ", KASRATAN = "ٍ", DAGGER_ALIF = "ٰ";
+// How a vocabulary word is shown: with or without the vowel marks (a setting).
+const arOf = w => settings.harakat ? w.voc : w.ar;
+
+// Split a word into letters, each with its marks and what it sounds like:
+// { ch: "بَ", name: "baa", vowel: "fatha", sound: "a", double: false }
+function letterSounds(voc) {
+  const out = [];
+  for (const c of voc) {
+    if (c >= "ً" && c <= "ْ" || c === DAGGER_ALIF) { if (out.length) out.at(-1).marks += c; }
+    else out.push({ base: c, marks: "" });
+  }
+  out.forEach((l, i) => {
+    const m = l.marks, prev = out[i - 1]?.marks || "";
+    l.ch = l.base + m;
+    l.name = LETTER_BY_AR[l.base]?.name || "";
+    l.double = m.includes(SHADDA);
+    [l.vowel, l.sound] =
+        m.includes(FATHA) ? ["fatha", "a"] : m.includes(DAMMA) ? ["damma", "u"] : m.includes(KASRA) ? ["kasra", "i"]
+      : m.includes(FATHATAN) ? ["fatha", "an"] : m.includes(DAMMATAN) ? ["damma", "un"] : m.includes(KASRATAN) ? ["kasra", "in"]
+      : m.includes(DAGGER_ALIF) ? ["fatha", "aa"] : m.includes(SUKUN) ? ["sukun", "–"]
+      // a long vowel: alif after fatha, waaw after damma, yaa after kasra
+      : "اى".includes(l.base) && prev.includes(FATHA) ? ["fatha", "aa"]
+      : l.base === "و" && prev.includes(DAMMA) ? ["damma", "uu"]
+      : l.base === "ي" && prev.includes(KASRA) ? ["kasra", "ii"]
+      : ["", ""];
+  });
+  return out;
+}
+
+// The four marks, as on the chart: fatha a, damma u, kasra i, sukun (no vowel). Plus shadda.
+const HARAKAT_LEGEND = `<div class="harakat-legend">
+  <span class="fatha"><b>ـَ</b> fatha = a</span><span class="damma"><b>ـُ</b> damma = u</span>
+  <span class="kasra"><b>ـِ</b> kasra = i</span><span class="sukun"><b>ـْ</b> sukun = no vowel</span>
+  <span><b>ـّ</b> shadda = say the letter twice</span>
+  <span class="long">Long vowels: <b>ـَا</b> aa · <b>ـُو</b> uu · <b>ـِي</b> ii</span></div>`;
 
 const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -834,8 +877,9 @@ function showVocabStatus(message) {
 
 // Learn's word list: every word in the range. Tap a row to hear it.
 function renderWordTable() {
+  $("tableLegend").innerHTML = settings.harakat ? HARAKAT_LEGEND : "";
   $("wordTableBody").innerHTML = state.vocab.map((w, i) =>
-    `<tr data-i="${i}"><td class="n">${w.n}</td><td class="ar" dir="rtl" lang="ar">${escapeHtml(w.ar)}</td>`
+    `<tr data-i="${i}"><td class="n">${w.n}</td><td class="ar" dir="rtl" lang="ar">${escapeHtml(arOf(w))}</td>`
     + `<td>${sayHtml(w.say)}</td><td>${escapeHtml(w.en)}</td></tr>`).join("");
 }
 
@@ -874,12 +918,17 @@ function renderStudy() {
   $("feedback").classList.add("hidden");
   $("formTag").textContent = `Word #${word.n} · range ${settings.vocabFrom + 1}–${settings.vocabTo}`;
   $("prompt").className = "prompt-word";
-  $("prompt").textContent = word.ar;
-  const letters = [...word.ar].map(c => LETTER_BY_AR[c]
-    ? `<span>${c}<small>${LETTER_BY_AR[c].name}</small></span>`
-    : c.trim() ? `<span>${c}</span>` : `<span class="gap"></span>`).join("");
+  $("prompt").textContent = arOf(word);
+  // Each letter with its name and, when the marks are shown, its vowel in the chart's colours.
+  const letters = letterSounds(settings.harakat ? word.voc : word.ar).map(l => !l.base.trim()
+    ? `<span class="gap"></span>`
+    : `<span>${l.ch}<small>${l.name}</small>`
+      + (settings.harakat && (l.sound || l.double)
+        ? `<em class="vowel ${l.vowel}">${l.double ? "×2 " : ""}${l.sound}</em>` : "")
+      + `</span>`).join("");
   $("promptSub").innerHTML = `<div class="study-meaning">${sayHtml(word.say)} <b>${escapeHtml(word.en)}</b></div>`
-    + `<div class="forms-row word study-letters">${letters}</div>`;
+    + `<div class="forms-row word study-letters">${letters}</div>`
+    + (settings.harakat ? HARAKAT_LEGEND : "");
   $("speakBtn").classList.toggle("hidden", !arabicVoice);
   const opts = $("options");
   opts.innerHTML = "";
@@ -890,7 +939,7 @@ function renderStudy() {
   go.addEventListener("click", nextCard);
   opts.appendChild(go);
   go.focus();
-  speak(word.ar);
+  speak(word.voc);
 }
 
 function nextCard() {
@@ -918,7 +967,7 @@ function renderVocab() {
   $("formTag").textContent = ar2en ? "What does it mean?" : "Pick the Arabic";
   $("speakBtn").classList.add("hidden");
   $("prompt").className = ar2en ? "prompt-word" : "prompt-en vocab";
-  $("prompt").textContent = ar2en ? word.ar : word.en;
+  $("prompt").textContent = ar2en ? arOf(word) : word.en;
   $("promptSub").textContent = "";
 
   const opts = $("options");
@@ -930,7 +979,7 @@ function renderVocab() {
     b.dataset.key = w.ar;
     b.innerHTML = `<span class="key">${i + 1}</span>`;
     const label = document.createElement("span");
-    label.textContent = ar2en ? w.en : w.ar;
+    label.textContent = ar2en ? w.en : arOf(w);
     b.appendChild(label);
     b.addEventListener("click", () => answerVocab(b, w));
     opts.appendChild(b);
@@ -951,14 +1000,14 @@ function answerVocab(btn, chosen) {
     btn.classList.add("wrong");
     $("fbMsg").innerHTML = vocabAr2En()
       ? `Not quite — it means <b>${escapeHtml(word.en)}</b>`
-      : `Not quite — it's <span class="arf" style="font-size:1.5rem">${word.ar}</span>`;
+      : `Not quite — it's <span class="arf" style="font-size:1.5rem">${arOf(word)}</span>`;
   }
-  $("fbExample").innerHTML = `<span class="word">${word.ar}</span> ${sayHtml(word.say)} — ${escapeHtml(word.en)}`;
+  $("fbExample").innerHTML = `<span class="word">${arOf(word)}</span> ${sayHtml(word.say)} — ${escapeHtml(word.en)}`;
   $("fbForms").className = "forms-row";
   $("fbForms").innerHTML = "";
   $("feedback").classList.remove("hidden");
   $("nextBtn").focus();
-  speak(word.ar);
+  speak(word.voc);
 }
 
 function renderLearnInfo() {
@@ -1095,7 +1144,7 @@ function endGame() {
   $("missedTitle").textContent = isWordGame() || isVocabGame() ? "Words to review:"
     : isOrderGame() ? "Letters you stumbled on:" : "Letters to review:";
   $("missed").innerHTML = state.missed.map(item => isVocabGame()
-    ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${escapeHtml(item.en)}</div>`
+    ? `<div><div class="ar">${arOf(item)}</div>${sayHtml(item.say)}<br>${escapeHtml(item.en)}</div>`
     : isWordGame()
     ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${item.emoji} ${item.meaning}</div>`
     : `<div><div class="ar">${item.ar}</div>${item.name}</div>`).join("");
@@ -1220,6 +1269,23 @@ for (const id of ["vocabFrom", "vocabTo"]) {
     setVocabRange(+$("vocabFrom").value, +$("vocabTo").value);
   });
 }
+$("harakatToggle").checked = settings.harakat;
+$("harakatToggle").addEventListener("change", e => {
+  settings.harakat = e.target.checked;
+  saveSettings();
+  if (!state.current || !isVocabGame() || !state.deck.length) return;
+  if (state.game === "vocab-learn") {
+    renderWordTable();
+    if (state.current.studying) renderStudy();
+  } else if (!state.answered) {
+    // Redraw the question without reshuffling the answers.
+    document.querySelectorAll(".option").forEach(b => {
+      const w = state.vocab.find(v => v.ar === b.dataset.key);
+      if (!vocabAr2En() && w) b.lastChild.textContent = arOf(w);
+    });
+    if (vocabAr2En()) $("prompt").textContent = arOf(state.current.word);
+  }
+});
 $("vocabPrevBtn").addEventListener("click", () => shiftVocabRange(-1));
 $("vocabNextBtn").addEventListener("click", () => shiftVocabRange(1));
 $("tableBtn").addEventListener("click", () => {
@@ -1230,7 +1296,7 @@ $("tableBtn").addEventListener("click", () => {
 });
 $("wordTableBody").addEventListener("click", e => {
   const row = e.target.closest("tr[data-i]");
-  if (row) speak(state.vocab[+row.dataset.i].ar);
+  if (row) speak(state.vocab[+row.dataset.i].voc);
 });
 $("learnRestartBtn").addEventListener("click", () => {
   settings.learnNext = settings.vocabFrom;
@@ -1253,7 +1319,10 @@ $("againBtn").addEventListener("click", () => startGame(state.game));
 $("retryMissedBtn").addEventListener("click", () => startGame(state.game, state.missed));
 $("menuBtn").addEventListener("click", goHome);
 $("homeBtn").addEventListener("click", goHome);
-$("speakBtn").addEventListener("click", () => speak((state.current.letter || state.current.word).ar));
+$("speakBtn").addEventListener("click", () => {
+  const item = state.current.letter || state.current.word;
+  speak(item.voc || item.ar);
+});
 
 // Word games
 $("checkSpellBtn").addEventListener("click", checkSpelling);

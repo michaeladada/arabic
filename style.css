@@ -225,6 +225,29 @@ button {
 .word-table td.n { color: var(--muted); font-size: .85rem; width: 1%; }
 .word-table td.ar { font-family: "Noto Naskh Arabic", serif; font-size: 1.6rem; line-height: 1.5; white-space: nowrap; }
 
+/* Vowel marks, coloured as on the chart: fatha orange, damma blue, kasra green, sukun red */
+.study-letters em.vowel {
+  font-family: "Nunito", sans-serif; font-style: normal; font-weight: 800; font-size: .7rem;
+  padding: 1px 7px; margin-top: 3px; border-radius: 99px; color: #fff; background: var(--muted); direction: ltr;
+}
+.vowel.fatha, .harakat-legend .fatha b { background: var(--palette-3); }
+.vowel.damma, .harakat-legend .damma b { background: var(--palette-2); }
+.vowel.kasra, .harakat-legend .kasra b { background: var(--palette-5); }
+.vowel.sukun, .harakat-legend .sukun b { background: var(--bad); }
+.harakat-legend {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 10px 0 2px;
+  font-size: .8rem; color: var(--muted);
+}
+.harakat-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.harakat-legend b {
+  font-family: "Noto Naskh Arabic", serif; font-size: 1.15rem; line-height: 1.6; color: var(--ink);
+  min-width: 26px; text-align: center; border-radius: 8px; padding: 0 4px;
+}
+.harakat-legend .fatha b, .harakat-legend .damma b, .harakat-legend .kasra b, .harakat-legend .sukun b { color: #fff; }
+.harakat-legend .long { flex-basis: 100%; justify-content: center; }
+#tableLegend .harakat-legend { margin: 8px 10px; }
+.harakat-toggle { margin-top: 12px; }
+
 .study-letters { margin: 10px 0 4px; }
 .study-letters .gap { width: 14px; }
 .options .study-go { grid-column: 1 / -1; padding: 14px; font-size: 1.1rem; }
