@@ -409,6 +409,10 @@ function speak(text) {
 const isWordGame = () => WORD_GAMES.has(state.game);
 const isOrderGame = () => ORDER_GAMES.has(state.game);
 const isVocabGame = () => VOCAB_GAMES.has(state.game);
+const drill = () => DRILL_GAMES[state.game];
+const isDrillQuiz = () => !!drill() && !drill().table;
+// Games that offer 4 or 6 answer choices (saved as vocabChoices).
+const usesVocabChoices = () => isVocabGame() || isDrillQuiz();
 
 async function startGame(game, items = null) {
   state.game = game;
@@ -424,12 +428,13 @@ async function startGame(game, items = null) {
   $("options").classList.toggle("order-grid", isOrderGame());
   $("options").classList.toggle("names", game === "order-name");
   // Settings that apply to this game.
-  $("formsSection").classList.toggle("hidden", isWordGame() || isVocabGame());
+  $("formsSection").classList.toggle("hidden", isWordGame() || isVocabGame() || !!drill());
   $("choicesSection").classList.toggle("hidden", isWordGame() || game === "vocab-learn");
-  $("scorePill").classList.toggle("hidden", game === "vocab-learn");   // flashcards aren't scored
-  $("lettersSection").classList.toggle("hidden", isVocabGame());
+  const unscored = game === "vocab-learn" || !!drill()?.table;          // flashcards and tables aren't scored
+  $("scorePill").classList.toggle("hidden", unscored);
+  $("lettersSection").classList.toggle("hidden", isVocabGame() || !!drill());
   $("vocabSection").classList.toggle("hidden", !isVocabGame());
-  $("roundSection").classList.toggle("hidden", !isWordGame() && !isVocabGame());
+  $("roundSection").classList.toggle("hidden", !isWordGame() && !isVocabGame() && !isDrillQuiz());
   renderRoundSize();
   renderChoiceCount();
   renderVocabRange();
@@ -437,8 +442,8 @@ async function startGame(game, items = null) {
   $("tableBtn").classList.toggle("hidden", game !== "vocab-learn");
   setTableView(game === "vocab-learn" && settings.learnTable);
   // The order games always use the whole alphabet, so they have no settings.
-  $("settingsBtn").classList.toggle("hidden", isOrderGame());
-  if (isOrderGame()) toggleSettings(false);
+  $("settingsBtn").classList.toggle("hidden", isOrderGame() || unscored && !isVocabGame());
+  if (isOrderGame() || drill()?.table) toggleSettings(false);
   // In Read it, show the answer right under Check rather than below the tiles.
   if (game === "read") $("readTools").after($("feedback"));
   else $("game").appendChild($("feedback"));
@@ -467,6 +472,8 @@ async function startGame(game, items = null) {
     : state.learnFrom !== null ? learnDeck(settings.roundSize)
     : isVocabGame() ? shuffle(state.vocab).slice(0, settings.roundSize)
     : isWordGame() ? shuffle(wordsFor(settings.letters)).slice(0, settings.roundSize)
+    : drill()?.table ? drill().set        // one table per verb / sentence
+    : drill() ? shuffle(drillQuestions(drill().set)).slice(0, settings.roundSize)
     : isOrderGame() ? [LETTERS]          // one pass through the whole alphabet
     : shuffle(chosen);
   state.index = 0;
@@ -495,12 +502,12 @@ function renderRoundSize() {
 function resizeRound(n) {
   settings.roundSize = n;
   saveSettings();
-  if (!state.deck.length || state.retry || (!isWordGame() && !isVocabGame())) return;
+  if (!state.deck.length || state.retry || (!isWordGame() && !isVocabGame() && !isDrillQuiz())) return;
   if (state.learnFrom !== null) {
     state.deck = learnDeck(n);
   } else if (n > state.deck.length) {
     const inDeck = new Set(state.deck);
-    const pool = isVocabGame() ? state.vocab : wordsFor(settings.letters);
+    const pool = isVocabGame() ? state.vocab : isDrillQuiz() ? drillQuestions(drill().set) : wordsFor(settings.letters);
     state.deck.push(...shuffle(pool.filter(w => !inDeck.has(w))).slice(0, n - state.deck.length));
   }
   // Never cut the word you're on (or ones already played).
@@ -697,6 +704,10 @@ function nextQuestion() {
   if (isVocabGame()) {
     state.current = { word: state.deck[state.index] };
     return state.game === "vocab-learn" ? renderStudy() : renderVocab();
+  }
+  if (drill()) {
+    state.current = { word: state.deck[state.index] };
+    return drill().table ? renderDrillTable() : renderDrillQuiz();
   }
   if (isOrderGame()) {
     state.current = { step: 0, wrongHere: 0 };
@@ -1063,6 +1074,206 @@ function shiftVocabRange(dir) {
   setVocabRange(from, from + size);
 }
 
+// ---------- Spoken Arabic: pronoun drills ----------
+// One word in the sentence changes with the pronoun: a verb's prefix/ending (أَشْرَب، تَشْرَب، يَشْرَب…)
+// or a possessive ending (اِسْمِي، اِسْمَك، اِسْمُو…). Each set has a table per item and a fill-in quiz.
+// Colloquial (spoken) forms, as in the class notes.
+const PRONOUNS = [
+  { ar: "أَنَا",    say: "'anaa",  en: "I",         pre: "أ", suf: "" },
+  { ar: "أَنْتَ",   say: "'anta",  en: "you (m.)",  pre: "ت", suf: "" },
+  { ar: "أَنْتِ",   say: "'anti",  en: "you (f.)",  pre: "ت", suf: "ي" },
+  { ar: "هُوَ",    say: "huwa",   en: "he",        pre: "ي", suf: "", third: true },
+  { ar: "هِيَ",    say: "hiya",   en: "she",       pre: "ت", suf: "", third: true },
+  { ar: "أَنْتُمْ",  say: "'antum", en: "you (pl.)", pre: "ت", suf: "و" },
+  { ar: "نَحْنُ",   say: "naHnu",  en: "we",        pre: "ن", suf: "" },
+  { ar: "هُمْ",    say: "hum",    en: "they",      pre: "ي", suf: "و" },
+];
+const PREFIX_SAY = { "أ": "'", "ت": "t", "ي": "y", "ن": "n" };
+
+// Present-tense verbs: [stem (as after the prefix), how the stem sounds, English].
+// The prefix takes a fatha (تَشْرَب) unless the stem starts with alif (تاكُل, آكُل).
+const VERBS = [
+  ["نَام", "naam", "sleep"], ["شْرَب", "shrab", "drink"], ["اكُل", "aakul", "eat"],
+  ["كْتُب", "ktub", "write"], ["دْرُس", "drus", "study"], ["لْعَب", "lʿab", "play"],
+  ["فْهَم", "fham", "understand"], ["سْمَع", "smaʿ", "hear"], ["فْتَح", "ftaH", "open"],
+  ["طْبُخ", "Tbukh", "cook"], ["غْسِل", "ghsil", "wash"], ["دْخُل", "dkhul", "go in"],
+  ["نْزِل", "nzil", "go down"], ["رْسُم", "rsum", "draw"], ["عْرِف", "ʿrif", "know"],
+  ["ضْحَك", "D-Hak", "laugh"], ["جْلِس", "jlis", "sit"], ["رُوح", "ruuH", "go"],
+  ["شُوف", "shuuf", "see"], ["زُور", "zuur", "visit"], ["قُول", "quul", "say"],
+  ["بِيع", "biiʿ", "sell"],
+];
+
+// "he sleeps", "she goes", "he studies", "he washes"
+function thirdPerson(en) {
+  const [verb, ...rest] = en.split(" ");
+  const s = verb === "go" || /(s|sh|ch|x|z)$/.test(verb) ? verb + "es"
+    : /[^aeiou]y$/.test(verb) ? verb.slice(0, -1) + "ies" : verb + "s";
+  return [s, ...rest].join(" ");
+}
+const capitalise = s => s[0].toUpperCase() + s.slice(1);
+
+// A verb's form for one pronoun, as [prefix, stem, ending] plus how it sounds.
+function verbParts([stem, stemSay], p) {
+  const vowel = stem.startsWith("ا") ? "" : FATHA;
+  let pre = p.pre + vowel, preSay = PREFIX_SAY[p.pre] + (vowel ? "a" : "");
+  if (p.pre === "أ" && stem.startsWith("ا")) { pre = "آ"; stem = stem.slice(1); }   // أ + اكُل → آكُل
+  const suf = p.suf;
+  if (suf) stem += suf === "ي" ? KASRA : DAMMA;
+  return { parts: [pre, stem, suf], say: preSay + stemSay + (suf === "ي" ? "ii" : suf ? "uu" : "") };
+}
+
+const VERB_SET = VERBS.map(v => {
+  const rows = PRONOUNS.map(p => {
+    const { parts, say } = verbParts(v, p);
+    return { p, slot: parts, sentenceSay: `${p.say} ${say}`,
+             en: `${capitalise(p.en)} ${p.third ? thirdPerson(v[2]) : v[2]}` };
+  });
+  return { title: rows[0].slot.join(""), titleEn: "to " + v[2], rows };
+});
+
+// Introducing yourself. Same pronouns, but "we" is the spoken إِحْنَا.
+const INTRO_PRONOUNS = PRONOUNS.map(p => p.en === "we" ? { ...p, ar: "إِحْنَا", say: "'iHna" } : p);
+const SUBJECT = ["I am", "You (m.) are", "You (f.) are", "He is", "She is", "You (pl.) are", "We are", "They are"];
+const POSSESSIVE = ["My", "Your (m.)", "Your (f.)", "His", "Her", "Your (pl.)", "Our", "Their"];
+// Each form: [before, stem, ending, how it sounds] – the before/ending parts are highlighted.
+const INTRO = [
+  { titleEn: "My name is Michael", rest: ["مِيخَائِيل", "miikhaa'iil"], en: i => `${POSSESSIVE[i]} name is Michael`,
+    forms: [["", "اِسْمِ", "ي", "ismi"], ["", "اِسْمَ", "ك", "ismak"], ["", "اِسْمِ", "ك", "ismik"],
+            ["", "اِسْمُ", "و", "ismu"], ["", "اِسِمْ", "هَا", "isimha"], ["", "اِسِمْ", "كُمْ", "isimkum"],
+            ["", "اِسِمْ", "نَا", "isimna"], ["", "اِسِمْ", "هُمْ", "isimhum"]] },
+  { titleEn: "I am forty", rest: ["أَرْبَعِين", "'arbaʿiin"], en: i => `${SUBJECT[i]} forty`,
+    forms: [["", "عُمْرِ", "ي", "ʿumri"], ["", "عُمْرَ", "ك", "ʿumrak"], ["", "عُمْرِ", "ك", "ʿumrik"],
+            ["", "عُمْرُ", "و", "ʿumru"], ["", "عُمُرْ", "هَا", "ʿumurha"], ["", "عُمُرْ", "كُمْ", "ʿumurkum"],
+            ["", "عُمُرْ", "نَا", "ʿumurna"], ["", "عُمُرْ", "هُمْ", "ʿumurhum"]] },
+  { titleEn: "I am from Jerusalem", rest: ["مِن الْقُدْس", "min il-quds"], en: i => `${SUBJECT[i]} from Jerusalem`,
+    forms: null },                       // nothing changes but the pronoun itself
+  { titleEn: "I work with computers", rest: ["بِالْحَاسُوب", "bil-Haasuub"],
+    en: i => `${capitalise(PRONOUNS[i].en)} ${PRONOUNS[i].third ? "works" : "work"} with computers`,
+    forms: [["بَ", "شْتَغِل", "", "bashtaghil"], ["بْتِ", "شْتَغِل", "", "btishtaghil"],
+            ["بْتِ", "شْتَغْلِ", "ي", "btishtaghli"], ["بِ", "شْتَغِل", "", "bishtaghil"],
+            ["بْتِ", "شْتَغِل", "", "btishtaghil"], ["بْتِ", "شْتَغْلُ", "و", "btishtaghlu"],
+            ["بِنِ", "شْتَغِل", "", "binishtaghil"], ["بِ", "شْتَغْلُ", "و", "bishtaghlu"]] },
+];
+const INTRO_SET = INTRO.map(item => {
+  const rows = INTRO_PRONOUNS.map((p, i) => {
+    const f = item.forms?.[i];
+    return f
+      ? { p, slot: f.slice(0, 3), rest: item.rest[0], sentenceSay: `${p.say} ${f[3]} ${item.rest[1]}`, en: item.en(i) }
+      // the pronoun is the word that changes
+      : { p, slot: [p.ar, "", ""], pronounSlot: true, rest: item.rest[0], sentenceSay: `${p.say} ${item.rest[1]}`, en: item.en(i) };
+  });
+  const first = rows[0];
+  return { title: (first.pronounSlot ? "" : first.p.ar + " ") + first.slot.join("") + " " + item.rest[0],
+           titleEn: item.titleEn, rows };
+});
+
+const DRILL_GAMES = {
+  "verb-table": { set: VERB_SET, table: true },
+  "verb-quiz":  { set: VERB_SET },
+  "intro-table": { set: INTRO_SET, table: true },
+  "intro-quiz":  { set: INTRO_SET },
+};
+// Every quiz question: one row (a pronoun) of one item.
+for (const set of [VERB_SET, INTRO_SET]) for (const item of set) for (const r of item.rows) r.item = item;
+const drillQuestions = set => set.flatMap(item => item.rows);
+const slotText = r => r.slot.join("");
+const sentenceText = r => [r.pronounSlot ? "" : r.p.ar, slotText(r), r.rest || ""].filter(Boolean).join(" ");
+
+// The changing word with its prefix/ending in green. A zero-width joiner on each side of a
+// boundary keeps the letters joined even where the browser shapes each coloured part on its own.
+function slotHtml(parts) {
+  const html = [];
+  parts.forEach((part, i) => {
+    if (!part) return;
+    const prev = parts.slice(0, i).join("").replace(HARAKAT, "").at(-1);
+    const joins = prev && !NON_CONNECTORS.has(prev) && prev !== "ة" && prev !== "ى";
+    const text = (joins ? ZWJ : "") + escapeHtml(part) + (i < 2 && parts.slice(i + 1).join("") && !NON_CONNECTORS.has(part.replace(HARAKAT, "").at(-1)) ? ZWJ : "");
+    html.push(i === 1 ? text : `<span class="affix">${text}</span>`);
+  });
+  return html.join("");
+}
+const sentenceHtml = (r, blank = false) => [r.pronounSlot ? "" : escapeHtml(r.p.ar),
+  blank ? `<span class="blank">…</span>` : slotHtml(r.slot), r.rest ? escapeHtml(r.rest) : ""].filter(Boolean).join(" ");
+
+// Table: every pronoun's sentence for one verb (or one sentence about yourself).
+function renderDrillTable() {
+  const item = state.current.word;
+  state.current.studying = true;
+  state.answered = true;
+  updateStats();
+  $("feedback").classList.add("hidden");
+  $("formTag").textContent = state.game === "verb-table" ? "Present tense" : "Introduce yourself";
+  $("prompt").className = "prompt-sentence";
+  $("prompt").textContent = item.title;
+  $("promptSub").innerHTML = `<div class="study-meaning"><b>${escapeHtml(item.titleEn)}</b></div>
+    <table class="drill-table"><tbody>${item.rows.map((r, i) =>
+      `<tr data-i="${i}"><td class="ar" dir="rtl" lang="ar">${sentenceHtml(r)}</td><td>${sayHtml(r.sentenceSay)}</td><td>${escapeHtml(r.en)}</td></tr>`).join("")}
+    </tbody></table>`;
+  $("speakBtn").classList.add("hidden");
+  const opts = $("options");
+  opts.innerHTML = "";
+  delete opts.dataset.count;
+  const go = document.createElement("button");
+  go.className = "btn study-go";
+  go.textContent = state.index + 1 < state.deck.length ? "Next →" : "Finish ✓";
+  go.addEventListener("click", nextCard);
+  opts.appendChild(go);
+  go.focus();
+}
+
+// Quiz: the sentence with the changing word left out; pick the right form.
+function renderDrillQuiz() {
+  const r = state.current.word;
+  state.answered = false;
+  updateStats();
+  $("feedback").classList.add("hidden");
+  $("speakBtn").classList.add("hidden");
+  $("formTag").textContent = r.pronounSlot ? "Pick the pronoun" : "Fill in the missing word";
+  $("prompt").className = "prompt-sentence";
+  $("prompt").innerHTML = sentenceHtml(r, true);
+  $("promptSub").innerHTML = `<div class="study-meaning"><b>${escapeHtml(r.en)}</b></div>`
+    + (state.game === "verb-quiz" ? `<div class="hint">${escapeHtml(r.item.title)} = ${escapeHtml(r.item.titleEn)}</div>` : "");
+  // The other forms of the same word (each written form once).
+  const forms = [...new Set(r.item.rows.map(slotText))].filter(f => f !== slotText(r));
+  const choices = shuffle([slotText(r), ...shuffle(forms).slice(0, settings.vocabChoices - 1)]);
+  const opts = $("options");
+  opts.innerHTML = "";
+  opts.dataset.count = settings.vocabChoices;
+  choices.forEach((f, i) => {
+    const b = document.createElement("button");
+    b.className = "option ar vocab-ar";
+    b.dataset.key = f;
+    b.innerHTML = `<span class="key">${i + 1}</span>`;
+    const label = document.createElement("span");
+    label.textContent = f;
+    b.appendChild(label);
+    b.addEventListener("click", () => answerDrill(b, f));
+    opts.appendChild(b);
+  });
+}
+
+function answerDrill(btn, chosen) {
+  if (state.answered) return;
+  state.answered = true;
+  const r = state.current.word;
+  const correct = chosen === slotText(r);
+  document.querySelectorAll(".option").forEach(b => {
+    b.disabled = true;
+    if (b.dataset.key === slotText(r)) b.classList.add("correct");
+  });
+  recordResult(correct, r);
+  if (!correct) {
+    btn.classList.add("wrong");
+    $("fbMsg").innerHTML = `Not quite — it's <span class="arf" style="font-size:1.5rem">${escapeHtml(slotText(r))}</span>`;
+  }
+  $("fbExample").innerHTML = `<span class="word sentence">${sentenceHtml(r)}</span> ${sayHtml(r.sentenceSay)} — ${escapeHtml(r.en)}`;
+  $("fbForms").className = "forms-row";
+  $("fbForms").innerHTML = "";
+  $("feedback").classList.remove("hidden");
+  $("nextBtn").focus();
+  speak(sentenceText(r));
+}
+
 // ---------- Alphabet order games ----------
 // All 28 letters, shuffled; tap them in alphabet order. One letter = one point if tapped
 // without a wrong tap first. Letters you stumbled on go to the review list.
@@ -1136,14 +1347,17 @@ function tapOrder(btn, letter) {
 function endGame() {
   $("bar").style.width = "100%";
   const total = isOrderGame() ? LETTERS.length : state.deck.length;
-  const learn = state.game === "vocab-learn";
-  $("finalScore").textContent = learn ? `${total} words` : `${state.score} / ${total}`;
-  $("againBtn").textContent = learn ? "Next words →" : "Play again";
+  const learn = state.game === "vocab-learn", table = !!drill()?.table;
+  $("finalScore").textContent = learn ? `${total} words` : table ? `${total} ${state.game === "verb-table" ? "verbs" : "sentences"} ✓`
+    : `${state.score} / ${total}`;
+  $("againBtn").textContent = learn ? "Next words →" : table ? "Go through again" : "Play again";
   $("missedWrap").classList.toggle("hidden", !state.missed.length);
   $("retryMissedBtn").classList.toggle("hidden", !state.missed.length || isOrderGame());
-  $("missedTitle").textContent = isWordGame() || isVocabGame() ? "Words to review:"
+  $("missedTitle").textContent = drill() ? "Sentences to review:" : isWordGame() || isVocabGame() ? "Words to review:"
     : isOrderGame() ? "Letters you stumbled on:" : "Letters to review:";
-  $("missed").innerHTML = state.missed.map(item => isVocabGame()
+  $("missed").innerHTML = state.missed.map(item => drill()
+    ? `<div><div class="ar sentence">${sentenceHtml(item)}</div>${sayHtml(item.sentenceSay)}<br>${escapeHtml(item.en)}</div>`
+    : isVocabGame()
     ? `<div><div class="ar">${arOf(item)}</div>${sayHtml(item.say)}<br>${escapeHtml(item.en)}</div>`
     : isWordGame()
     ? `<div><div class="ar">${item.ar}</div>${sayHtml(item.say)}<br>${item.emoji} ${item.meaning}</div>`
@@ -1169,7 +1383,7 @@ function toggleSettings(open = $("settings").classList.contains("hidden")) {
 
 // Letter games offer 4, 6 or 8 choices; vocabulary games 4 or 6 (saved separately).
 function renderChoiceCount() {
-  const vocab = isVocabGame();
+  const vocab = usesVocabChoices();
   const current = vocab ? settings.vocabChoices : settings.choices;
   document.querySelectorAll("#choiceCount [data-count]").forEach(b => {
     b.classList.toggle("hidden", vocab && !VOCAB_CHOICE_COUNTS.includes(+b.dataset.count));
@@ -1252,13 +1466,14 @@ $("formChecks").addEventListener("change", onFormsChange);
 $("choiceCount").addEventListener("click", e => {
   const b = e.target.closest("[data-count]");
   if (!b) return;
-  if (isVocabGame()) settings.vocabChoices = +b.dataset.count;
+  if (usesVocabChoices()) settings.vocabChoices = +b.dataset.count;
   else settings.choices = +b.dataset.count;
   saveSettings();
   renderChoiceCount();
   // Redraw the current question with the new number of choices (answered ones change on Next).
   if (!state.current || state.answered) return;
   if (isVocabGame()) renderVocab();
+  else if (isDrillQuiz()) renderDrillQuiz();
   else if (!isWordGame() && !isOrderGame()) renderQuestion();
 });
 renderChoiceCount();
@@ -1285,6 +1500,10 @@ $("harakatToggle").addEventListener("change", e => {
     });
     if (vocabAr2En()) $("prompt").textContent = arOf(state.current.word);
   }
+});
+$("promptSub").addEventListener("click", e => {          // tables: tap a sentence to hear it
+  const row = e.target.closest(".drill-table tr[data-i]");
+  if (row && state.current?.word?.rows) speak(sentenceText(state.current.word.rows[+row.dataset.i]));
 });
 $("vocabPrevBtn").addEventListener("click", () => shiftVocabRange(-1));
 $("vocabNextBtn").addEventListener("click", () => shiftVocabRange(1));

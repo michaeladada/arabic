@@ -248,6 +248,25 @@ button {
 #tableLegend .harakat-legend { margin: 8px 10px; }
 .harakat-toggle { margin-top: 12px; }
 
+/* Spoken Arabic: pronoun drills */
+.game-card .demo .ar.small-ar { font-size: 1.9rem; }
+.prompt-sentence { font-family: "Noto Naskh Arabic", serif; font-size: clamp(2rem, 8vw, 3.2rem); line-height: 1.6; margin: 6px 0; direction: rtl; }
+.affix { color: var(--palette-5); font-weight: 700; }
+.blank {
+  display: inline-block; min-width: 2.6em; border-bottom: 3px dashed var(--accent);
+  color: var(--accent); text-align: center; line-height: 1.1;
+}
+.drill-table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left; font-size: .9rem; }
+.drill-table td { padding: 4px 10px; border-top: 1px solid #f0edf4; vertical-align: middle; }
+.drill-table tr { cursor: pointer; }
+.drill-table tr:hover { background: #f6f3fb; }
+.drill-table td.ar { font-family: "Noto Naskh Arabic", serif; font-size: 1.6rem; line-height: 1.6; text-align: right; white-space: nowrap; }
+.feedback .word.sentence, .summary .missed .ar.sentence { font-size: 1.6rem; direction: rtl; }
+@media (max-width: 520px) {
+  .drill-table td { padding: 4px 5px; font-size: .8rem; }
+  .drill-table td.ar { font-size: 1.3rem; white-space: normal; }
+}
+
 .study-letters { margin: 10px 0 4px; }
 .study-letters .gap { width: 14px; }
 .options .study-go { grid-column: 1 / -1; padding: 14px; font-size: 1.1rem; }
